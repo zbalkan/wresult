@@ -1,8 +1,13 @@
+#!/usr/bin/env python3
+
+import argparse
 import dataclasses
 import json
+import os
+import pathlib
 import re
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import xmltodict
 
@@ -21,14 +26,11 @@ class MergedMg:
     sca_files: list[str]
 
     def to_json(self, indent: Optional[int] = None) -> str:
-        if indent is not None:
-            return json.dumps(self, cls=EnhancedJSONEncoder, indent=indent)
-        else:
-            return json.dumps(self, cls=EnhancedJSONEncoder)
+        return json.dumps(self, cls=EnhancedJSONEncoder, indent=indent)
 
 
 class Parser:
-    def parse_merged_mg(self, file_path: str) -> MergedMg:
+    def parse_merged_mg(self, file_path: Union[pathlib.Path, str]) -> MergedMg:
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
 
@@ -36,7 +38,7 @@ class Parser:
         lines = content.split("\n")
         if not lines[0].startswith("#default"):
             raise ValueError(
-                "Invalid file format: First line must start with '# default'")
+                "Invalid file format: First line must start with '#default'")
 
         # Find the start of AR section
         ar_index: int = 0
@@ -90,11 +92,39 @@ class Parser:
         )
 
 
-# Usage
-file_path = "D:\\Downloads\\merged.mg"
-parser = Parser()
-merged_mg = parser.parse_merged_mg(file_path)
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog='wresult', description="Parse Wazuh agent configuration, print to stdout or save to an HTML file.")
+    parser.add_argument('--merged_mg_path', '-mp', type=pathlib.Path, action="store", required=False,
+                        help=argparse.SUPPRESS)
+    parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path, action="store", required=False,
+                        help=argparse.SUPPRESS)
+    parser.add_argument('--output', '-o', type=pathlib.Path, action="store", required=False,
+                        help="Output file path")
 
-# Display extracted structure
+    args = parser.parse_args()
+    if args.merged_mg_path is None:
+        if os.name == 'linux':
+            merged_mg_path = pathlib.Path(
+                '/var/ossec/etc/shared/merged.mg')
+        else:
+            merged_mg_path = pathlib.Path(
+                'C:/Program Files (x86)/ossec-agent/shared/merged.mg')
+    else:
+        merged_mg_path = str(args.merged_mg_path)
 
-print(merged_mg.to_json(indent=2))
+    # Parse merged.mg file
+
+    parser = Parser()
+    merged_mg = parser.parse_merged_mg(merged_mg_path)
+
+    # Display extracted structure
+    print(merged_mg.to_json(indent=2))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}")
+        exit(1)
