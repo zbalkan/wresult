@@ -7,7 +7,7 @@ import os
 import pathlib
 import re
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, Optional, OrderedDict, Union
 
 import xmltodict
 
@@ -29,7 +29,25 @@ class MergedMg:
         return json.dumps(self, cls=EnhancedJSONEncoder, indent=indent)
 
 
+@dataclass
+class OssecConf:
+    content: dict
+
+    def to_json(self, indent: Optional[int] = None) -> str:
+        return json.dumps(self.content, cls=EnhancedJSONEncoder, indent=indent)
+
+
 class Parser:
+
+    def parse_ossec_conf(self, file_path: Union[pathlib.Path, str]) -> OssecConf:
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read()
+
+        ossec_conf = xmltodict.parse(
+            '<root>' + content + '</root>').get("root", {})
+        ossec_conf = OrderedDict(sorted(ossec_conf.items()))
+        return OssecConf(content=ossec_conf)
+
     def parse_merged_mg(self, file_path: Union[pathlib.Path, str]) -> MergedMg:
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
@@ -103,6 +121,8 @@ def main() -> None:
                         help="Output file path")
 
     args = parser.parse_args()
+
+    # Parse merged.mg file
     if args.merged_mg_path is None:
         if os.name == 'linux':
             merged_mg_path = pathlib.Path(
@@ -113,12 +133,22 @@ def main() -> None:
     else:
         merged_mg_path = str(args.merged_mg_path)
 
-    # Parse merged.mg file
+    # Parse ossec.conf file
+    if args.ossec_conf_path is None:
+        if os.name == 'linux':
+            ossec_conf_path = pathlib.Path('/var/ossec/etc/ossec.conf')
+        else:
+            ossec_conf_path = pathlib.Path(
+                'C:/Program Files (x86)/ossec-agent/ossec.conf')
+    else:
+        ossec_conf_path = str(args.ossec_conf_path)
 
     parser = Parser()
     merged_mg = parser.parse_merged_mg(merged_mg_path)
+    ossec_conf = parser.parse_ossec_conf(ossec_conf_path)
 
     # Display extracted structure
+    print(ossec_conf.to_json(indent=2))
     print(merged_mg.to_json(indent=2))
 
 
