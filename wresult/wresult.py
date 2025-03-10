@@ -7,7 +7,7 @@ import os
 import pathlib
 import re
 from dataclasses import dataclass
-from typing import Any, Optional, OrderedDict, Union
+from typing import Optional, OrderedDict, Union
 
 import xmltodict
 
@@ -20,113 +20,89 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 
 @dataclass
-class MergedMg:
-    ar_section: list[str]
-    agent_config: list[dict]
-    sca_files: list[str]
-
-    def to_json(self, indent: Optional[int] = None) -> str:
-        return json.dumps(self, cls=EnhancedJSONEncoder, indent=indent)
-
-
-@dataclass
-class OssecConf:
+class Conf:
     content: dict
 
     def to_json(self, indent: Optional[int] = None) -> str:
         return json.dumps(self.content, cls=EnhancedJSONEncoder, indent=indent)
 
 
+@dataclass
+class FinalConf(Conf):
+
+    def __init__(self, ossec_conf: Conf, agent_conf: Conf) -> None:
+        self.content = ossec_conf.content.copy()
+        self.content.update(agent_conf.content)
+
+
 class Parser:
 
-    def parse_ossec_conf(self, file_path: Union[pathlib.Path, str]) -> OssecConf:
+    def parse_conf(self, file_path: Union[pathlib.Path, str]) -> Conf:
         with open(file_path, "r", encoding="utf-8") as file:
-            content = file.read()
+            text = file.read()
 
-        ossec_conf = xmltodict.parse(
-            '<root>' + content + '</root>').get("root", {})
-        ossec_conf = OrderedDict(sorted(ossec_conf.items()))
-        return OssecConf(content=ossec_conf)
+        text = self.__sanitize(text)
 
-    def parse_merged_mg(self, file_path: Union[pathlib.Path, str]) -> MergedMg:
-        with open(file_path, "r", encoding="utf-8") as file:
-            content = file.read()
+        content: dict = xmltodict.parse(
+            '<root>' + text + '</root>').get("root", {})
 
-        # Validate first line
-        lines = content.split("\n")
-        if not lines[0].startswith("#default"):
-            raise ValueError(
-                "Invalid file format: First line must start with '#default'")
+        self.__consolidate_config_items(content)
 
-        # Find the start of AR section
-        ar_index: int = 0
-        agent_index: int = 0
-        sca_index: int = 0
-        for i, line in enumerate(lines):
-            if re.match(r"!\d+ ar.conf", line):
-                ar_index = i
-            elif re.match(r"!\d+ agent.conf", line):
-                agent_index = i
-            elif re.match(r"!\d+ .*?rcl.txt", line):
-                if sca_index == 0:
-                    sca_index = i  # Use only the first match.
-                    break
-            else:
-                continue
+        content = OrderedDict(sorted(content.items()))
+        return Conf(content=content)
 
-        if ar_index == 0 or agent_index == 0 or sca_index == 0:
-            raise ValueError("Invalid file format: Missing section")
+    def __consolidate_config_items(self, content) -> None:
+        root = list(content.items())[0]
+        # root[1] is either ossec_config or agent_config
+        if isinstance(root[1], list):
+            new_content = root[1][0]  # get the first item
+            for i, internal_dict in enumerate(root[1]):
+                if i == 0:
+                    continue
+                for key, value in internal_dict.items():
+                    if new_content.get(key) is None:
+                        new_content[key] = value
+                    else:
+                        if not isinstance(new_content[key], list):
+                            new_content[key] = [new_content[key]]
+                        new_content[key].append(value)
 
-        ar_section = lines[ar_index + 1:agent_index]
+            content[root[0]] = new_content
 
-        # Parse agent.conf XML using xmltodict
-        agent_config_list: list[dict[str, Any]] = []
-        agent_config_text = '\n'.join(lines[agent_index + 1:sca_index])
-        try:
-            agent_config_list = list(xmltodict.parse(
-                "<root>" + agent_config_text + "</root>").get("root", []).values())
-            if agent_config_list == [None]:
-                agent_config_list = []
-        except Exception:
-            agent_config_list = []
+    def __sanitize(self, xml_content: str) -> str:
+        pattern = r'<query>(.*?)</query>'
+        matches = re.findall(pattern, xml_content, re.DOTALL)
 
-        agent_config = agent_config_list  # type: ignore
+        for match in matches:
+            extracted_data = match.strip()
+            extracted_data = extracted_data.replace(
+                "\\<", "<").replace("\\>", ">").replace(r"\t", " ").replace(r"  ", " ")
+            extracted_data = re.sub(r'\n\s+', ' ', extracted_data)
+            xml_content = xml_content.replace(match, extracted_data)
 
-        # Parse SCA files into a dictionary
-        sca_files_list = []
-        for i in range(sca_index, len(lines)):
-            line = lines[i]
-            if line.startswith("!"):
-                m = re.match(r"!\d+ (.*?rcl.txt)", line)
-                if m:
-                    sca_files_list.append(m.group(1))
-
-        sca_files = sca_files_list
-
-        return MergedMg(
-            ar_section=ar_section,
-            agent_config=agent_config,
-            sca_files=sca_files
-        )
+        return xml_content
 
 
 def main() -> None:
     arg_parser = argparse.ArgumentParser(
         prog='wresult', description="Parse Wazuh agent configuration, print to stdout or save to an HTML file.")
-    arg_parser.add_argument('--merged_mg_path', '-mp', type=pathlib.Path, action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path, action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--output', '-o', type=pathlib.Path, action="store", required=False, help="Output file path")
+    arg_parser.add_argument('--agent_conf_path', '-ap', type=pathlib.Path,
+                            action="store", required=False, help=argparse.SUPPRESS)
+    arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path,
+                            action="store", required=False, help=argparse.SUPPRESS)
+    arg_parser.add_argument('--output', '-o', type=pathlib.Path,
+                            action="store", required=False, help="Output file path")
 
     args = arg_parser.parse_args()
 
-    # Parse merged.mg file
-    if args.merged_mg_path is None:
+    # Parse agent.conf file
+    if args.agent_conf_path is None:
         if os.name == 'linux':
-            merged_mg_path = '/var/ossec/etc/shared/merged.mg'
+            agent_conf_path = '/var/ossec/etc/shared/agent.conf'
         else:
-            merged_mg_path = 'C:/Program Files (x86)/ossec-agent/shared/merged.mg'
+            agent_conf_path = 'C:/Program Files (x86)/ossec-agent/shared/agent.conf'
     else:
-        merged_mg_path = str(args.merged_mg_path)
+        agent_conf_path = str(args.agent_conf_path)
 
     # Parse ossec.conf file
     if args.ossec_conf_path is None:
@@ -138,17 +114,17 @@ def main() -> None:
         ossec_conf_path = str(args.ossec_conf_path)
 
     policy_parser = Parser()
-    merged_mg = policy_parser.parse_merged_mg(merged_mg_path)
-    ossec_conf = policy_parser.parse_ossec_conf(ossec_conf_path)
+    agent_conf = policy_parser.parse_conf(agent_conf_path)
+    ossec_conf = policy_parser.parse_conf(ossec_conf_path)
+    final = FinalConf(ossec_conf, agent_conf)
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as file:
-            file.write(ossec_conf.to_json(indent=2))
-            file.write(merged_mg.to_json(indent=2))
+            file.write(final.to_json(indent=2))
+
     else:
         # Display extracted structure
-        print(ossec_conf.to_json(indent=2))
-        print(merged_mg.to_json(indent=2))
+        print(final.to_json(2))
 
 
 if __name__ == "__main__":
