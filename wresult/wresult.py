@@ -111,45 +111,44 @@ class Parser:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
+    arg_parser = argparse.ArgumentParser(
         prog='wresult', description="Parse Wazuh agent configuration, print to stdout or save to an HTML file.")
-    parser.add_argument('--merged_mg_path', '-mp', type=pathlib.Path, action="store", required=False,
-                        help=argparse.SUPPRESS)
-    parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path, action="store", required=False,
-                        help=argparse.SUPPRESS)
-    parser.add_argument('--output', '-o', type=pathlib.Path, action="store", required=False,
-                        help="Output file path")
+    arg_parser.add_argument('--merged_mg_path', '-mp', type=pathlib.Path, action="store", required=False, help=argparse.SUPPRESS)
+    arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path, action="store", required=False, help=argparse.SUPPRESS)
+    arg_parser.add_argument('--output', '-o', type=pathlib.Path, action="store", required=False, help="Output file path")
 
-    args = parser.parse_args()
+    args = arg_parser.parse_args()
 
     # Parse merged.mg file
     if args.merged_mg_path is None:
         if os.name == 'linux':
-            merged_mg_path = pathlib.Path(
-                '/var/ossec/etc/shared/merged.mg')
+            merged_mg_path = '/var/ossec/etc/shared/merged.mg'
         else:
-            merged_mg_path = pathlib.Path(
-                'C:/Program Files (x86)/ossec-agent/shared/merged.mg')
+            merged_mg_path = 'C:/Program Files (x86)/ossec-agent/shared/merged.mg'
     else:
         merged_mg_path = str(args.merged_mg_path)
 
     # Parse ossec.conf file
     if args.ossec_conf_path is None:
         if os.name == 'linux':
-            ossec_conf_path = pathlib.Path('/var/ossec/etc/ossec.conf')
+            ossec_conf_path = '/var/ossec/etc/ossec.conf'
         else:
-            ossec_conf_path = pathlib.Path(
-                'C:/Program Files (x86)/ossec-agent/ossec.conf')
+            ossec_conf_path = 'C:/Program Files (x86)/ossec-agent/ossec.conf'
     else:
         ossec_conf_path = str(args.ossec_conf_path)
 
-    parser = Parser()
-    merged_mg = parser.parse_merged_mg(merged_mg_path)
-    ossec_conf = parser.parse_ossec_conf(ossec_conf_path)
+    policy_parser = Parser()
+    merged_mg = policy_parser.parse_merged_mg(merged_mg_path)
+    ossec_conf = policy_parser.parse_ossec_conf(ossec_conf_path)
 
-    # Display extracted structure
-    print(ossec_conf.to_json(indent=2))
-    print(merged_mg.to_json(indent=2))
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as file:
+            file.write(ossec_conf.to_json(indent=2))
+            file.write(merged_mg.to_json(indent=2))
+    else:
+        # Display extracted structure
+        print(ossec_conf.to_json(indent=2))
+        print(merged_mg.to_json(indent=2))
 
 
 if __name__ == "__main__":
