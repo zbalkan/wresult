@@ -33,6 +33,7 @@ class FinalConf(Conf):
     def __init__(self, ossec_conf: Conf, agent_conf: Conf) -> None:
         self.content = ossec_conf.content.copy()
         self.content.update(agent_conf.content)
+        # TODO: consolidate the two configurations
 
 
 class Parser:
