@@ -37,7 +37,7 @@ As a result:
 `wresult` is designed for easy installation and execution via` pipx`.
 
 ```shell
-pipx install https://github.com/zbalkan/wresult/archive/refs/heads/main.zip
+pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
 ```
 
 ## Usage
