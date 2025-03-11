@@ -15,14 +15,23 @@ Wazuh agents dynamically apply configurations:
 - Conditional rules (e.g., OS-specific, profile-based configurations) determine the final applied settings.
 
 As a result:
-🔹 Compliance teams struggle to verify required security policies.🔹 Security engineers face difficulties troubleshooting unexpected agent behavior.🔹 Administrators need a way to see the configuration exactly as the agent applies it.
+
+🔹 Compliance teams struggle to verify required security policies
+
+🔹 Security engineers face difficulties troubleshooting unexpected agent behavior.
+
+🔹 Administrators need a way to see the configuration exactly as the agent applies it.
 
 ### The Solution
 
 ✅ Shows the real, running configuration—not just raw config files.
+
 ✅ Resolves conflicts—newer policies override older ones.
+
 ✅ Filters out irrelevant settings—only applicable rules are included.
+
 ✅ Saves time—eliminates manual inspection of multiple configuration files.
+
 
 ### Features
 
@@ -34,7 +43,7 @@ As a result:
 
 ## Installation
 
-`wresult` is designed for easy installation and execution via` pipx`.
+`wresult` is designed for easy installation and execution via `pipx`.
 
 ```shell
 pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
@@ -44,7 +53,9 @@ pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
 
 CLI Output (JSON for Automation)
 
+```shell
 sudo wresult | jq
+```
 
 🔹 View the exact applied settings in structured JSON, ideal for automation.
 
