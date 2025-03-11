@@ -26,39 +26,20 @@ class HtmlGenerator:
     <title>Wazuh Configuration Viewer</title>
     <style>
         :root {
-            --bg: rgb(255, 255, 255);
-            --titleStyle: rgb(121, 121, 121);
-            --moreDetails: rgb(200, 200, 200);
-            --string: orange;
-            --number: rgb(0, 76, 255);
-            --boolean: rgb(191, 0, 255);
+            --bg: rgb(40, 40, 40);
+            --titleStyle: rgb(170, 170, 170);
+            --moreDetails: rgb(140, 140, 140);
+            --string: rgb(223, 177, 93);
+            --number: rgb(119, 152, 229);
+            --boolean: rgb(206, 142, 227);
             --function: rgb(109, 176, 137);
             --objectNull: rgb(176, 142, 109);
             --undefined: rgb(176, 142, 109);
         }
 
-        body {
+       body {
             margin: 0;
-            background-color: rgb(255, 255, 255);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: rgb(40, 40, 40);
-                --titleStyle: rgb(170, 170, 170);
-                --moreDetails: rgb(140, 140, 140);
-                --string: rgb(223, 177, 93);
-                --number: rgb(119, 152, 229);
-                --boolean: rgb(206, 142, 227);
-                --function: rgb(109, 176, 137);
-                --objectNull: rgb(176, 142, 109);
-                --undefined: rgb(176, 142, 109);
-            }
-
-           body {
-                margin: 0;
-                background-color: rgb(40, 40, 40);
-            }
+            background-color: rgb(40, 40, 40);
         }
 
         ul {
@@ -140,6 +121,7 @@ class HtmlGenerator:
             position: relative;
             top: 0;
             width: 100%;
+            height: 100%;
             font-size: 11px;
             font-family: Arial, sans-serif;
             border-top: 1px solid #444;
@@ -276,8 +258,8 @@ class HtmlGenerator:
     </div>
 
     <div class="footer">
-        <p>Visit official Wazuh documentation for <a href="https://documentation.wazuh.com/current/user-manual/reference/ossec-conf/index.html@" target="_blank">Local configuration (ossec.conf)</a> and <a href="https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html" target="_blank">Centralized configuration (agent.conf)</a>. The results displayed on this page are consolidated configurations and may vary for each agent.</p>
-        <p>&copy;2025 <a href="https://zaferbalkan.com" target="_blank">Zafer Balkan</a></p>
+        <p>Visit official Wazuh documentation for <a href="https://documentation.wazuh.com/current/user-manual/reference/ossec-conf/index.html" target="_blank">Local configuration (ossec.conf)</a> and <a href="https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html" target="_blank">Centralized configuration (agent.conf)</a>. The results displayed on this page are consolidated configurations and may vary for each agent.</p>
+        <p>&copy; 2025 <a href="https://zaferbalkan.com" target="_blank">Zafer Balkan</a></p>
         <p>The brand <a href="https://wazuh.com/" target="_blank">Wazuh</a> and related marks, emblems and images are registered trademarks of their respective owners.</p>
     </div>
 </body>
