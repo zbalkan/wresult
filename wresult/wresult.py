@@ -26,10 +26,9 @@ class HtmlGenerator:
     <title>Wazuh Configuration Viewer</title>
     <style>
         :root {
-            --bg: rgb(40, 40, 40);
-            --titleStyle: rgb(170, 170, 170);
-            --moreDetails: rgb(140, 140, 140);
-            --string: rgb(223, 177, 93);
+            --bg: rgb(255, 255, 255);
+            --titleStyle: rgb(0, 0, 0);
+            --string: rgb(96, 96, 100);
             --number: rgb(119, 152, 229);
             --boolean: rgb(206, 142, 227);
             --function: rgb(109, 176, 137);
@@ -37,7 +36,7 @@ class HtmlGenerator:
             --undefined: rgb(176, 142, 109);
         }
 
-       body {
+        body {
             margin: 0;
             background-color: rgb(40, 40, 40);
         }
@@ -53,68 +52,98 @@ class HtmlGenerator:
             background-color: var(--bg)
         }
 
-        li:hover .moreDetails {
-            display: unset
+        summary::marker {
+            color: rgb(61, 130, 241);
         }
 
-        .moreDetails {
-            display: none;
-            color: var(--moreDetails)
+        li :hover {
+            background-color: rgb(240, 191, 76);
+            color: black;
         }
 
         .titleStyle {
             color: var(--titleStyle)
         }
-        .titleStyleDescription {
-            color: var(--moreDetails)
-        }
+
         .content {
             flex: 1;
+            background-color: rgb(180, 180, 180);
+            max-width: 90%;
         }
 
-        .string {color: var(--string);}
-        .string::before,.string::after {content: '"';color: var(--string)}
-        .number {color: var(--number);}
-        .boolean {color: var(--boolean)}
-        .function {color: var(--function)}
-        .object {color: var(--objectNull)}
-        .undefined {color: var(--undefined)}
+        .string {
+            color: var(--string);
+        }
+
+        .string::before,
+        .string::after {
+            content: '"';
+            color: var(--string)
+        }
+
+        .number {
+            color: var(--number);
+        }
+
+        .boolean {
+            color: var(--boolean)
+        }
+
+        .function {
+            color: var(--function)
+        }
+
+        .object {
+            color: var(--objectNull)
+        }
+
+        .undefined {
+            color: var(--undefined)
+        }
+
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #333;
+            background-color: rgb(61, 130, 241);
             padding: 15px 20px;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', 'Liberation Sans', sans-serif;
         }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-size: 10px;
-        }
-        .navbar a:hover {
-            text-decoration: underline;
-        }
+
         .navbar-left {
             display: flex;
             flex-direction: column;
         }
+
         .navbar-title {
-            font-size: 20px;
+            font-size: 28px;
             font-weight: bold;
         }
+
         .navbar-left p {
-            font-size: 12px;
+            font-size: 14px;
             margin: 5px 0 0 0;
             font-family: monospace;
         }
+
         .navbar-links {
             display: flex;
             gap: 15px;
         }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
         .footer {
-            background-color: rgb(40, 40, 40);
+            background-color: rgb(0, 0, 0);
             color: white;
             text-align: center;
             padding: 10px;
@@ -122,14 +151,18 @@ class HtmlGenerator:
             top: 0;
             width: 100%;
             height: 100%;
-            font-size: 11px;
-            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', 'Liberation Sans', sans-serif;
             border-top: 1px solid #444;
         }
+
         .footer a {
-            color: orange;
+            font-weight: bold;
+            color: white;
             text-decoration: none;
+            text-transform: uppercase;
         }
+
         .footer a:hover {
             text-decoration: underline;
         }
@@ -141,21 +174,21 @@ class HtmlGenerator:
         function expandAll() {
             document.querySelectorAll('details:not([open]) summary').forEach(summary => {
                 summary.click();
-                setTimeout(() => expandAll(), 50); // Recursively expand deeper levels
+                setTimeout(() => expandAll(), 10); // Recursively expand deeper levels
             });
         }
 
         function collapseAll() {
             document.querySelectorAll('details[open] summary').forEach(summary => {
                 summary.click();
-                setTimeout(() => collapseAll(), 50); // Recursively collapse deeper levels
+                setTimeout(() => collapseAll(), 10); // Recursively collapse deeper levels
             });
         }
     </script>
 
     <script type="text/javascript">
         function renderJson({root = '', data, depth = 0} = {}) {
-            const wordwrapPattern = /(?![^\\n]{1,80}$)([^\\n]{1,80})\\s/g;
+            const wordwrapPattern = /(?![^\\n]{1,120}$)([^\\n]{1,120})\\s/g;
 
             if (depth == 0 && root == '') {
                 const pre = document.createElement('pre')
@@ -179,10 +212,7 @@ class HtmlGenerator:
 
                     detailsElement.appendChild(summaryEl)
 
-
-                    let appendedString = Array.isArray(data[d]) ? `Array, ${data[d].length}` : 'Object'
-
-                    summaryEl.innerHTML = `${d} <span class="titleStyleDescription">(${appendedString})</span></summary>`
+                    summaryEl.innerHTML = `${d}`
 
                     const newRoot = document.createElement('ul')
 
@@ -220,7 +250,6 @@ class HtmlGenerator:
 
                     let titleSpan = document.createElement('span')
                     let contentSpan = document.createElement('span')
-                    let detailsContentSpan = document.createElement('span')
 
                     titleSpan.innerText = `${d}: `
                     titleSpan.classList.add('titleStyle')
@@ -228,12 +257,8 @@ class HtmlGenerator:
                     contentSpan.innerText = display.replace(wordwrapPattern, '$1\\n');
                     contentSpan.classList.add(currentType)
 
-                    detailsContentSpan.innerText = `   Type: ${currentType}; Length: ${display?.length}; Boolean: ${Boolean(display)}`
-                    detailsContentSpan.classList.add('moreDetails')
-
                     el.appendChild(titleSpan)
                     el.appendChild(contentSpan)
-                    el.appendChild(detailsContentSpan)
 
                     root.appendChild(el)
                 }
@@ -248,8 +273,8 @@ class HtmlGenerator:
             <p>Report Date: DATETIME_PLACEHOLDER</p>
         </div>
         <div class="navbar-links">
-            <a href="#" onclick="expandAll()">Show All</a>
-            <a href="#" onclick="collapseAll()">Hide All</a>
+            <a href="#" onclick="expandAll()" class="button">Show All</a>
+            <a href="#" onclick="collapseAll()" class="button">Hide All</a>
         </div>
     </div>
 
