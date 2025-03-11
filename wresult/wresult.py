@@ -449,7 +449,7 @@ class ConfParser:
 
 def main() -> None:
     arg_parser = argparse.ArgumentParser(
-        prog='wresult', description="Parse Wazuh agent configuration, print to stdout or save to an HTML file.")
+        prog='wresult', description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
     arg_parser.add_argument('--agent_conf_path', '-ap', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path,

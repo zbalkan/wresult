@@ -1,0 +1,41 @@
+[build-system]
+requires = [
+    "setuptools>=76.0.0",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wresult"
+version = "0.1.2"
+description = "Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Zafer Balkan", email = "zafer@zaferbalkan.com" }
+]
+license = { text = "MIT" }
+keywords = ["wazuh", "logging", "siem"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
+]
+
+dependencies = [
+    "xmltodict ==0.14.2",
+]
+
+[project.urls]
+homepage = "https://github.com/zbalkan/wresult"
+
+[project.scripts]
+wazuhevtx = "wresult.wresult:main"
