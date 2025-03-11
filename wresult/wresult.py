@@ -290,20 +290,14 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 
 @dataclass
-class Conf:
-    content: dict
-
-
-@dataclass
 class FinalConf():
 
-    def __init__(self, ossec_conf: Conf, agent_conf: Conf) -> None:
-        # self.content = ossec_conf.content.copy()
-        # self.content.update(agent_conf.content)
-        # TODO: consolidate the two configurations
+    content: dict
 
-        c = ossec_conf.content.copy().get("ossec_config", {})
-        a = agent_conf.content.copy().get("agent_config", {})
+    def __init__(self, ossec_conf: dict, agent_conf: dict) -> None:
+
+        c = ossec_conf.copy().get("ossec_config", {})
+        a = agent_conf.copy().get("agent_config", {})
 
         for key, value in a.items():
             if c.get(key) is None:
@@ -380,7 +374,7 @@ class ConfParser:
             self.__agent_profile = lines[3].replace(
                 ' ', '').replace(r'\n', '').split(",")
 
-    def __parse_conf(self, file_path: Union[pathlib.Path, str]) -> Conf:
+    def __parse_conf(self, file_path: Union[pathlib.Path, str]) -> dict:
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
 
@@ -392,7 +386,7 @@ class ConfParser:
         self.__deduplicate_blocks(content)
 
         content = OrderedDict(sorted(content.items()))
-        return Conf(content=content)
+        return content
 
     def __deduplicate_blocks(self, content: dict) -> None:
         root = list(content.items())[0]
