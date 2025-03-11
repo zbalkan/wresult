@@ -173,6 +173,7 @@ class HtmlGenerator:
 
     <script type="text/javascript">
         function renderJson({root = '', data, depth = 0} = {}) {
+            const wordwrapPattern = /(?![^\\n]{1,80}$)([^\\n]{1,80})\\s/g;
 
             if (depth == 0 && root == '') {
                 const pre = document.createElement('pre')
@@ -242,7 +243,7 @@ class HtmlGenerator:
                     titleSpan.innerText = `${d}: `
                     titleSpan.classList.add('titleStyle')
 
-                    contentSpan.innerText = display
+                    contentSpan.innerText = display.replace(wordwrapPattern, '$1\\n');
                     contentSpan.classList.add(currentType)
 
                     detailsContentSpan.innerText = `   Type: ${currentType}; Length: ${display?.length}; Boolean: ${Boolean(display)}`
