@@ -58,16 +58,26 @@ class FinalConf():
 
 class ConfParser:
 
-    agent_os: str
-    agent_name: str
-    agent_profile: list[str]
+    __agent_os: str
+    __agent_name: str
+    __agent_profile: list[str]
+    __agent_conf: Conf
+    __ossec_conf: Conf
 
-    def __init__(self) -> None:
+    def __init__(self, ossec_conf: Union[pathlib.Path, str], agent_conf: Union[pathlib.Path, str]) -> None:
+        self.__get_agent_info()
+        self.__ossec_conf = self.__parse_conf(ossec_conf)
+        self.__agent_conf = self.__parse_conf(agent_conf)
+
+    def parse(self) -> FinalConf:
+        return FinalConf(self.__ossec_conf, self.__agent_conf)
+
+    def __get_agent_info(self):
         # get OS info
         if os.name == 'posix':
-            self.agent_os = "Linux"
+            self.__agent_os = "Linux"
         else:
-            self.agent_os = "Windows"
+            self.__agent_os = "Windows"
 
         # Get agent name and profile
         if os.name == 'posix':
@@ -77,10 +87,10 @@ class ConfParser:
 
         with open(agent_info_path, "r", encoding="utf-8") as file:
             lines = file.readlines()
-            self.agent_name = lines[0].strip()
-            self.agent_profile = lines[3].replace(' ', '').replace(r'\n', '').split(",")
+            self.__agent_name = lines[0].strip()
+            self.__agent_profile = lines[3].replace(' ', '').replace(r'\n', '').split(",")
 
-    def parse_conf(self, file_path: Union[pathlib.Path, str]) -> Conf:
+    def __parse_conf(self, file_path: Union[pathlib.Path, str]) -> Conf:
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
 
@@ -94,7 +104,7 @@ class ConfParser:
         content = OrderedDict(sorted(content.items()))
         return Conf(content=content)
 
-    def __deduplicate_blocks(self, content) -> None:
+    def __deduplicate_blocks(self, content: dict) -> None:
         root = list(content.items())[0]
         # root[1] is either ossec_config or agent_config
         if isinstance(root[1], list):
@@ -105,13 +115,13 @@ class ConfParser:
                 # Handle config per os, profile or name
                 # https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html#options
                 if internal_dict.get('@os') is not None:
-                    if re.compile(internal_dict.get('@os')).match(self.agent_os):
+                    if re.compile(internal_dict.get('@os')).match(self.__agent_os):
                         new_content.update(internal_dict)
                 elif internal_dict.get('@profile') is not None:
-                    if re.compile(internal_dict.get('@profile')).match(self.agent_profile):
+                    if re.compile(internal_dict.get('@profile')).match(self.__agent_profile):
                         new_content.update(internal_dict)
                 elif internal_dict.get('@name') is not None:
-                    if re.compile(internal_dict.get('@name')).match(self.agent_name):
+                    if re.compile(internal_dict.get('@name')).match(self.__agent_name):
                         new_content.update(internal_dict)
                 else:
                     for key, value in internal_dict.items():
@@ -171,10 +181,9 @@ def main() -> None:
     else:
         ossec_conf_path = str(args.ossec_conf_path)
 
-    policy_parser = ConfParser()
-    agent_conf = policy_parser.parse_conf(agent_conf_path)
-    ossec_conf = policy_parser.parse_conf(ossec_conf_path)
-    final = FinalConf(ossec_conf, agent_conf)
+    policy_parser = ConfParser(ossec_conf=ossec_conf_path, agent_conf=agent_conf_path)
+
+    final = policy_parser.parse()
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as file:
