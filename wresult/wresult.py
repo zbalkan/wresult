@@ -87,7 +87,9 @@ class HtmlGenerator:
         .titleStyleDescription {
             color: var(--moreDetails)
         }
-
+        .content {
+            flex: 1;
+        }
 
         .string {color: var(--string);}
         .string::before,.string::after {content: '"';color: var(--string)}
@@ -104,6 +106,14 @@ class HtmlGenerator:
             padding: 15px 20px;
             color: white;
             font-family: Arial, sans-serif;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 10px;
+        }
+        .navbar a:hover {
+            text-decoration: underline;
         }
         .navbar-left {
             display: flex;
@@ -122,28 +132,20 @@ class HtmlGenerator:
             display: flex;
             gap: 15px;
         }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-size: 10px;
-        }
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-
         .footer {
-            background-color: #333;
+            background-color: rgb(40, 40, 40);
             color: white;
             text-align: center;
             padding: 10px;
-            position: fixed;
-            bottom: 0;
+            position: relative;
+            top: 0;
             width: 100%;
-            font-size: 12px;
+            font-size: 11px;
             font-family: Arial, sans-serif;
+            border-top: 1px solid #444;
         }
         .footer a {
-            color: #ddd;
+            color: orange;
             text-decoration: none;
         }
         .footer a:hover {
@@ -153,18 +155,6 @@ class HtmlGenerator:
 </head>
 
 <body>
-    <div class="navbar">
-        <div class="navbar-left">
-            <div class="navbar-title">Wazuh Configuration Viewer</div>
-            <p>Agent: NAME_PLACEHOLDER (ID_PLACEHOLDER)</p>
-            <p>Report Date: DATETIME_PLACEHOLDER</p>
-        </div>
-        <div class="navbar-links">
-            <a href="#" onclick="expandAll()">Show All</a>
-            <a href="#" onclick="collapseAll()">Hide All</a>
-        </div>
-    </div>
-
     <script type="text/javascript">
         function expandAll() {
             document.querySelectorAll('details:not([open]) summary').forEach(summary => {
@@ -266,9 +256,23 @@ class HtmlGenerator:
                 }
             }
         }
-
-        renderJson({data:JSON_PLACEHOLDER})
     </script>
+
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="navbar-title">Wazuh Configuration Viewer</div>
+            <p>Agent: NAME_PLACEHOLDER (ID_PLACEHOLDER)</p>
+            <p>Report Date: DATETIME_PLACEHOLDER</p>
+        </div>
+        <div class="navbar-links">
+            <a href="#" onclick="expandAll()">Show All</a>
+            <a href="#" onclick="collapseAll()">Hide All</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <script>renderJson({data:JSON_PLACEHOLDER})</script>
+    </div>
 
     <div class="footer">
         <p>Visit official Wazuh documentation for <a href="https://documentation.wazuh.com/current/user-manual/reference/ossec-conf/index.html@" target="_blank">Local configuration (ossec.conf)</a> and <a href="https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html" target="_blank">Centralized configuration (agent.conf)</a>. The results displayed on this page are consolidated configurations and may vary for each agent.</p>
