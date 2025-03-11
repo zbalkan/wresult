@@ -157,7 +157,7 @@ class HtmlGenerator:
         <div class="navbar-left">
             <div class="navbar-title">Wazuh Configuration Viewer</div>
             <p>Agent: NAME_PLACEHOLDER (ID_PLACEHOLDER)</p>
-            <p>Date: DATETIME_PLACEHOLDER</p>
+            <p>Report Date: DATETIME_PLACEHOLDER</p>
         </div>
         <div class="navbar-links">
             <a href="#" onclick="expandAll()">Show All</a>
@@ -332,21 +332,34 @@ class ConfParser:
     __agent_name: str
     __agent_id: str
     __agent_profile: list[str]
-    __agent_conf: Conf
-    __ossec_conf: Conf
+    __conf: FinalConf
 
-    def __init__(self, ossec_conf: Union[pathlib.Path, str], agent_conf: Union[pathlib.Path, str]) -> None:
-        self.__get_agent_info()
-        self.__ossec_conf = self.__parse_conf(ossec_conf)
-        self.__agent_conf = self.__parse_conf(agent_conf)
+    def __init__(self, ossec_conf_path: Union[pathlib.Path, str, None] = None, agent_conf_path: Union[pathlib.Path, str, None] = None, agent_info_path: Union[pathlib.Path, str, None] = None) -> None:
 
-    def parse(self) -> FinalConf:
-        return FinalConf(self.__ossec_conf, self.__agent_conf)
+        self.__get_agent_info(agent_info_path=agent_info_path)
+
+        if ossec_conf_path is None:
+            if os.name == 'posix':
+                ossec_conf_path = '/var/ossec/etc/ossec.conf'
+            else:
+                ossec_conf_path = 'C:/Program Files (x86)/ossec-agent/ossec.conf'
+
+        if agent_conf_path is None:
+            if os.name == 'posix':
+                agent_conf_path = '/var/ossec/etc/shared/agent.conf'
+            else:
+                agent_conf_path = 'C:/Program Files (x86)/ossec-agent/shared/agent.conf'
+
+        self.__conf = FinalConf(
+            ossec_conf=self.__parse_conf(ossec_conf_path), agent_conf=self.__parse_conf(agent_conf_path))
+
+    def get_json(self, indent: Optional[int] = 2) -> str:
+        return self.__conf.to_json(indent=indent)
 
     def get_html(self) -> str:
-        return HtmlGenerator().generate(self.__agent_name, self.__agent_id, self.parse().to_json())
+        return HtmlGenerator().generate(self.__agent_name, self.__agent_id, self.__conf.to_json())
 
-    def __get_agent_info(self):
+    def __get_agent_info(self, agent_info_path: Union[pathlib.Path, str, None] = None) -> None:
         # get OS info
         if os.name == 'posix':
             self.__agent_os = "Linux"
@@ -354,16 +367,18 @@ class ConfParser:
             self.__agent_os = "Windows"
 
         # Get agent name and profile
-        if os.name == 'posix':
-            agent_info_path = '/var/ossec/etc/.agent_info'
-        else:
-            agent_info_path = 'C:/Program Files (x86)/ossec-agent/.agent_info'
+        if agent_info_path is None:
+            if os.name == 'posix':
+                agent_info_path = '/var/ossec/etc/.agent_info'
+            else:
+                agent_info_path = 'C:/Program Files (x86)/ossec-agent/.agent_info'
 
         with open(agent_info_path, "r", encoding="utf-8") as file:
             lines = file.readlines()
             self.__agent_name = lines[0].strip()
             self.__agent_id = lines[2].strip()
-            self.__agent_profile = lines[3].replace(' ', '').replace(r'\n', '').split(",")
+            self.__agent_profile = lines[3].replace(
+                ' ', '').replace(r'\n', '').split(",")
 
     def __parse_conf(self, file_path: Union[pathlib.Path, str]) -> Conf:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -433,30 +448,25 @@ def main() -> None:
                             action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
+    arg_parser.add_argument('--agent_info_path', '-ai', type=pathlib.Path,
+                            action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--output', '-o', type=pathlib.Path,
                             action="store", required=False, help="Output file path")
 
     args = arg_parser.parse_args()
 
-    # Parse agent.conf file
-    if args.agent_conf_path is None:
-        if os.name == 'linux':
-            agent_conf_path = '/var/ossec/etc/shared/agent.conf'
-        else:
-            agent_conf_path = 'C:/Program Files (x86)/ossec-agent/shared/agent.conf'
-    else:
-        agent_conf_path = str(args.agent_conf_path)
-
     # Parse ossec.conf file
-    if args.ossec_conf_path is None:
-        if os.name == 'linux':
-            ossec_conf_path = '/var/ossec/etc/ossec.conf'
-        else:
-            ossec_conf_path = 'C:/Program Files (x86)/ossec-agent/ossec.conf'
-    else:
-        ossec_conf_path = str(args.ossec_conf_path)
+    ossec_conf_path = args.ossec_conf_path
 
-    policy_parser = ConfParser(ossec_conf=ossec_conf_path, agent_conf=agent_conf_path)
+    # Parse agent.conf file
+    agent_conf_path = args.agent_conf_path
+
+    # Parse agent info file
+    agent_info_path = args.agent_info_path
+
+    policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
+                               agent_conf_path=agent_conf_path,
+                               agent_info_path=agent_info_path)
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as file:
@@ -464,8 +474,7 @@ def main() -> None:
 
     else:
         # Display extracted structure
-        final = policy_parser.parse()
-        print(final.to_json(2))
+        print(policy_parser.get_json())
 
 
 if __name__ == "__main__":
