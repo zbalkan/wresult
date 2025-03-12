@@ -99,15 +99,20 @@ sudo wresult --output report.html
 
 ## Hidden Arguments
 
-In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. They are subject to change and must be considered undocumented API.
+In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. Yhe users must provide all 3 of them if needed. Otherwise, the tool will fall back to default locations for the undefined paths. This is designed to test and validate configuration changes with out breaking the agent.
 
+They are subject to change and must be considered undocumented API.
+
+```shell
 --agent_conf_path (-ap) (optional for testing): Custom path for agent.conf.
 --ossec_conf_path (-op) (optional for testing): Custom path for ossec.conf.
 --agent_info_path (-ai) (optional for testing): Custom path for .agent_info file.
+```
 
 > [!IMPORTANT]
 > ⚠️ Requires Root/Admin Privileges
-> Wazuh configuration files are restricted to administrators. Run with sudo (Linux) or as an Administrator (Windows).
+> Due to the Wazuh configuration files' permissions, run with sudo (Linux) or as an Administrator (Windows).
+> But if you are testing against custom configuration files only using the hidden parameters, you don't need higher privileges.
 
 ## License
 
