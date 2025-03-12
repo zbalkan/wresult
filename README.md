@@ -4,6 +4,9 @@
 
 `wresult` provides the running configuration of a Wazuh agent by reconstructing how it applies ossec.conf and agent.conf. This tool is designed to support users for compliance reporting and troubleshooting, ensuring that teams can see the actual settings enforced on an agent.
 
+> [!IMPORTANT]
+> While Wazuh supports agents on systems other than Linux and Windows, such as MacOS, Solaris, HP UX, this tool is designed for Windows and Linux only.
+
 ## Why Use wresult?
 
 ### The Problem
@@ -67,7 +70,7 @@ options:
 ### CLI Output (JSON for Automation)
 
 ```shell
-sudo wresult | jq
+sudo wresult | jq .
 ```
 
 🔹 View the exact applied settings in structured JSON, ideal for automation.
