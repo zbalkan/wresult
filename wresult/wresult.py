@@ -484,7 +484,7 @@ def main() -> None:
     args = arg_parser.parse_args()
 
     if not is_admin():
-        raise PermissionError("You need to run this script as an administrator.")
+        raise PermissionError("You need to run this script with higher privileges; either use sudo or run as an administrator.")
 
     # Parse ossec.conf file
     ossec_conf_path = args.ossec_conf_path
