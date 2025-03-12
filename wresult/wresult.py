@@ -349,12 +349,18 @@ class ConfParser:
                 ossec_conf_path = '/var/ossec/etc/ossec.conf'
             else:
                 ossec_conf_path = 'C:/Program Files (x86)/ossec-agent/ossec.conf'
+            if os.path.exists(ossec_conf_path) is False:
+                raise FileNotFoundError(
+                    f"Could not find ossec.conf file at {ossec_conf_path}. Please provide the correct path.")
 
         if agent_conf_path is None:
             if os.name == 'posix':
                 agent_conf_path = '/var/ossec/etc/shared/agent.conf'
             else:
                 agent_conf_path = 'C:/Program Files (x86)/ossec-agent/shared/agent.conf'
+            if os.path.exists(agent_conf_path) is False:
+                raise FileNotFoundError(
+                    f"Could not find agent.conf file at {agent_conf_path}. Please provide the correct path.")
 
         self.__conf = FinalConf(
             ossec_conf=self.__parse_conf(ossec_conf_path), agent_conf=self.__parse_conf(agent_conf_path))
@@ -378,6 +384,10 @@ class ConfParser:
                 agent_info_path = '/var/ossec/etc/.agent_info'
             else:
                 agent_info_path = 'C:/Program Files (x86)/ossec-agent/.agent_info'
+
+        if os.path.exists(agent_info_path) is False:
+            raise FileNotFoundError(
+                f"Could not find agent_info file at {agent_info_path}. Please provide the correct path.")
 
         with open(agent_info_path, "r", encoding="utf-8") as file:
             lines = file.readlines()
