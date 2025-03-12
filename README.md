@@ -96,18 +96,15 @@ sudo wresult --output report.html
 
 ## Hidden Arguments
 
-In order to support testing, tI provided hidden parameters
+In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. They are subject to change and must be considered undocumented API.
+
 --agent_conf_path (-ap) (optional for testing): Custom path for agent.conf.
 --ossec_conf_path (-op) (optional for testing): Custom path for ossec.conf.
---agent_info_path (-ai) (optional for testing): Custom path for agent info file.
+--agent_info_path (-ai) (optional for testing): Custom path for .agent_info file.
 
-## Permissions
-
-⚠️ Requires Root/Admin PrivilegesWazuh configuration files are restricted to administrators. Run with sudo (Linux) or as an Administrator (Windows):
-
-```shell
-sudo wresult
-```
+> [!IMPORTANT]
+> ⚠️ Requires Root/Admin Privileges
+> Wazuh configuration files are restricted to administrators. Run with sudo (Linux) or as an Administrator (Windows).
 
 ## License
 
