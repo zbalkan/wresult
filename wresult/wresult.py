@@ -483,9 +483,6 @@ def main() -> None:
 
     args = arg_parser.parse_args()
 
-    if not is_admin():
-        raise PermissionError("You need to run this script with higher privileges; either use sudo or run as an administrator.")
-
     # Parse ossec.conf file
     ossec_conf_path = args.ossec_conf_path
 
@@ -494,6 +491,13 @@ def main() -> None:
 
     # Parse agent info file
     agent_info_path = args.agent_info_path
+
+    if not ossec_conf_path or not agent_conf_path or not agent_info_path:
+        # If not specified, it means the tool must read from default locations
+        # This means we need to check for privileges.
+        if not is_admin():
+            raise PermissionError(
+                "You need to run this script with higher privileges; either use sudo or run as an administrator.")
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
