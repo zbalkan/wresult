@@ -16,6 +16,7 @@ Wazuh agents dynamically apply configurations:
 - ossec.conf is loaded first (local settings).
 - agent.conf is fetched from the Wazuh manager and applied sequentially, overriding or appending settings.
   - Conditional configurations, aka [Options](https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html#options) (e.g., OS-specific, profile-based configurations) determine the final applied settings.
+- There are internal options that amends the behaviors in an advanced manner. For agents, it is generally just the debug configuration. Since the original file `internal_options.conf` is overwritten on every update, there is the `local_internal_options.conf` file for overriding default behaviors. This is crucial on troubleshooting. And user needs to be aware of the deviances from the defaults.
 
 As a result:
 
@@ -104,9 +105,10 @@ In order to support testing, the tool has provided hidden parameters that are no
 They are subject to change and must be considered undocumented API.
 
 ```shell
---agent_conf_path (-ap) (optional for testing): Custom path for agent.conf.
---ossec_conf_path (-op) (optional for testing): Custom path for ossec.conf.
---agent_info_path (-ai) (optional for testing): Custom path for .agent_info file.
+--agent_conf_path (-ap): Custom path for agent.conf.
+--ossec_conf_path (-op): Custom path for ossec.conf.
+--agent_info_path (-ai): Custom path for .agent_info file.
+--local_internal_options_path (-li): Custom path for local_internal_options_path.conf file.
 ```
 
 > [!IMPORTANT]
