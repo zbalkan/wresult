@@ -548,7 +548,9 @@ def main() -> None:
                                local_internal_options_path=local_internal_options_path)
 
     if args.output:
-        with open(args.output, "w", encoding="utf-8") as file:
+        # Save to file
+        output_path = os.path.abspath(args.output)
+        with open(output_path, "w", encoding="utf-8") as file:
             file.write(policy_parser.get_html())
 
     else:
