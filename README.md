@@ -2,7 +2,7 @@
 
 ## Overview
 
-`wresult` provides the exact, running configuration of a Wazuh agent by reconstructing how it applies ossec.conf and agent.conf. This tool is essential for compliance reporting and troubleshooting, ensuring that teams can see the actual settings enforced on an agent.
+`wresult` provides the running configuration of a Wazuh agent by reconstructing how it applies ossec.conf and agent.conf. This tool is designed to support users for compliance reporting and troubleshooting, ensuring that teams can see the actual settings enforced on an agent.
 
 ## Why Use wresult?
 
@@ -12,26 +12,28 @@ Wazuh agents dynamically apply configurations:
 
 - ossec.conf is loaded first (local settings).
 - agent.conf is fetched from the Wazuh manager and applied sequentially, overriding or appending settings.
-- Conditional rules (e.g., OS-specific, profile-based configurations) determine the final applied settings.
+  - Conditional configurations, aka [Options](https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html#options) (e.g., OS-specific, profile-based configurations) determine the final applied settings.
 
 As a result:
 
-🔹 Compliance teams struggle to verify required security policies
+🔹 Compliance teams struggle to verify if required security policies are applied.
 
 🔹 Security engineers face difficulties troubleshooting unexpected agent behavior.
 
 🔹 Administrators need a way to see the configuration exactly as the agent applies it.
 
+> [!NOTE]
+> This is the same issue with Group Policies in Windows environments where multiple policies, including local policies can be applied and there is a non-trivial precedence process to combine them for the expected results. There, the solution is collecting the Resultant Set of Policies (RSoP) via `gpresult` command. Hence the tool, `wresult`.
+
 ### The Solution
 
-✅ Shows the real, running configuration—not just raw config files.
+✅ Shows the running configuration—not just raw config files.
 
 ✅ Resolves conflicts—newer policies override older ones.
 
 ✅ Filters out irrelevant settings—only applicable rules are included.
 
 ✅ Saves time—eliminates manual inspection of multiple configuration files.
-
 
 ### Features
 
@@ -51,7 +53,18 @@ pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
 
 ## Usage
 
-CLI Output (JSON for Automation)
+```yaml
+usage: wresult [-h] [--output OUTPUT]
+
+Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.
+
+options:
+  -h, --help            show this help message and exit
+  --output OUTPUT, -o OUTPUT
+                        Output file path
+```
+
+### CLI Output (JSON for Automation)
 
 ```shell
 sudo wresult | jq
@@ -67,13 +80,13 @@ sudo wresult | jq
 
 > TODO: Add GIF
 
-Generate a Human-Readable Report
+### Generate a Human-Readable Report
 
 > TODO: Add GIF
 
+```shell
 sudo wresult --output report.html
-
-> TODO: Add GIF
+```
 
 🔹 Generates an interactive HTML report with expandable sections.
 
@@ -81,9 +94,9 @@ sudo wresult --output report.html
 
 > TODO: Add GIF
 
-## Arguments
+## Hidden Arguments
 
---output (-o): If specified, writes an HTML report instead of JSON to stdout.
+In order to support testing, tI provided hidden parameters
 --agent_conf_path (-ap) (optional for testing): Custom path for agent.conf.
 --ossec_conf_path (-op) (optional for testing): Custom path for ossec.conf.
 --agent_info_path (-ai) (optional for testing): Custom path for agent info file.
