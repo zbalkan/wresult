@@ -549,7 +549,12 @@ def main() -> None:
 
     if args.output:
         # Save to file
-        output_path = os.path.abspath(args.output)
+        output_path: str = os.path.abspath(args.output)
+        parent = os.path.dirname(output_path)
+        if os.path.exists(parent) is False:
+            raise FileNotFoundError(
+                f"Could not find the specified directory at {parent}. Please provide the correct path.")
+
         with open(output_path, "w", encoding="utf-8") as file:
             file.write(policy_parser.get_html())
 
