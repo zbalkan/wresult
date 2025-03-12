@@ -552,8 +552,9 @@ def main() -> None:
         output_path: str = os.path.abspath(args.output)
         parent = os.path.dirname(output_path)
         if os.path.exists(parent) is False:
-            raise FileNotFoundError(
+            print(
                 f"Could not find the specified directory at {parent}. Please provide the correct path.")
+            exit(1)
 
         with open(output_path, "w", encoding="utf-8") as file:
             file.write(policy_parser.get_html())
@@ -567,5 +568,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"Error: {e}")
-        exit(1)
+        print(f"Error: {e.args[0]}")
+        exit()
