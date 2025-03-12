@@ -23,7 +23,7 @@ class HtmlGenerator:
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wazuh Configuration Viewer</title>
+    <title>Wazuh Agent Configuration Result for NAME_PLACEHOLDER</title>
     <style>
         :root {
             --bg: rgb(255, 255, 255);
@@ -268,7 +268,7 @@ class HtmlGenerator:
 
     <div class="navbar">
         <div class="navbar-left">
-            <div class="navbar-title">Wazuh Configuration Viewer</div>
+            <div class="navbar-title">Wazuh Agent Configuration Result</div>
             <p>Agent: NAME_PLACEHOLDER (ID_PLACEHOLDER)</p>
             <p>Report Date: DATETIME_PLACEHOLDER</p>
         </div>

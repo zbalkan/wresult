@@ -1,4 +1,4 @@
-# Wazuh Configuration Result (`wresult`)
+# Wazuh Agent Configuration Result (`wresult`)
 
 ## Overview
 
