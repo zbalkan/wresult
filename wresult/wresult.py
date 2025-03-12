@@ -447,7 +447,21 @@ class ConfParser:
         return xml_content
 
 
+def is_admin() -> bool:
+    if os.name == 'posix':
+        return int(os.getuid()) == 0  # type: ignore
+    elif os.name == 'nt':
+        import ctypes
+        return int(ctypes.windll.shell32.IsUserAnAdmin()) != 0
+    else:
+        raise NotImplementedError
+
+
 def main() -> None:
+
+    if not is_admin():
+        raise PermissionError("You need to run this script as an administrator.")
+
     arg_parser = argparse.ArgumentParser(
         prog='wresult', description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
     arg_parser.add_argument('--agent_conf_path', '-ap', type=pathlib.Path,
