@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 import re
+import sys
 from dataclasses import dataclass
 from datetime import datetime as dt
 from typing import Any, Optional, OrderedDict, Union
@@ -356,8 +357,9 @@ class ConfParser:
             else:
                 ossec_conf_path = 'C:/Program Files (x86)/ossec-agent/ossec.conf'
             if os.path.exists(ossec_conf_path) is False:
-                raise FileNotFoundError(
+                print(
                     f"Could not find ossec.conf file at {ossec_conf_path}. Please provide the correct path.")
+                exit(1)
 
         if agent_conf_path is None:
             if os.name == 'posix':
@@ -365,8 +367,9 @@ class ConfParser:
             else:
                 agent_conf_path = 'C:/Program Files (x86)/ossec-agent/shared/agent.conf'
             if os.path.exists(agent_conf_path) is False:
-                raise FileNotFoundError(
+                print(
                     f"Could not find agent.conf file at {agent_conf_path}. Please provide the correct path.")
+                exit(1)
 
         self.__conf = FinalConf(
             ossec_conf=self.__parse_conf(ossec_conf_path), agent_conf=self.__parse_conf(agent_conf_path))
@@ -398,8 +401,9 @@ class ConfParser:
                 agent_info_path = 'C:/Program Files (x86)/ossec-agent/.agent_info'
 
         if os.path.exists(agent_info_path) is False:
-            raise FileNotFoundError(
+            print(
                 f"Could not find agent_info file at {agent_info_path}. Please provide the correct path.")
+            exit(1)
 
         with open(agent_info_path, "r", encoding="utf-8") as file:
             lines = file.readlines()
@@ -446,7 +450,8 @@ class ConfParser:
                         option = match.group(2)
                         value = match.group(3)
 
-                        internal_options[module] = internal_options.get(module, {})
+                        internal_options[module] = internal_options.get(
+                            module, {})
                         internal_options[module][option] = value
         return internal_options
 
@@ -504,7 +509,8 @@ def is_admin() -> bool:
         import ctypes
         return int(ctypes.windll.shell32.IsUserAnAdmin()) != 0
     else:
-        raise NotImplementedError
+        print("Unsupported OS")
+        exit(1)
 
 
 def main() -> None:
@@ -539,8 +545,9 @@ def main() -> None:
         # If not specified, it means the tool must read from default locations
         # This means we need to check for privileges.
         if not is_admin():
-            raise PermissionError(
+            print(
                 "You need to run this script with higher privileges; either use sudo or run as an administrator.")
+            exit(1)
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
@@ -569,4 +576,7 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         print(f"Error: {e.args[0]}")
-        exit()
+        try:
+            sys.exit(1)
+        except SystemExit:
+            os._exit(1)
