@@ -8,7 +8,7 @@ import pathlib
 import re
 from dataclasses import dataclass
 from datetime import datetime as dt
-from typing import Optional, OrderedDict, Union
+from typing import Any, Optional, OrderedDict, Union
 
 import xmltodict
 
@@ -285,7 +285,8 @@ class HtmlGenerator:
     </div>
 
     <div class="footer">
-        <p>Visit official Wazuh documentation for <a href="https://documentation.wazuh.com/current/user-manual/reference/ossec-conf/index.html" target="_blank">Local configuration (ossec.conf)</a> and <a href="https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html" target="_blank">Centralized configuration (agent.conf)</a>. The results displayed on this page are consolidated configurations and may vary for each agent.</p>
+        <p>Visit official Wazuh documentation for <a href="https://documentation.wazuh.com/current/user-manual/reference/ossec-conf/index.html" target="_blank">Local configuration (ossec.conf)</a>, <a href="https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html" target="_blank">Centralized configuration (agent.conf)</a> and <a href="https://documentation.wazuh.com/current/user-manual/reference/internal-options.html" target="_blank">Local internal options</a>.</p>
+        <p>The results displayed on this page are consolidated configurations and may vary for each agent.</p>
         <p>&copy; 2025 <a href="https://zaferbalkan.com" target="_blank">Zafer Balkan</a></p>
         <p>The brand <a href="https://wazuh.com/" target="_blank">Wazuh</a> and related marks, emblems and images are registered trademarks of their respective owners.</p>
     </div>
@@ -342,7 +343,10 @@ class ConfParser:
     __agent_profile: list[str]
     __conf: FinalConf
 
-    def __init__(self, ossec_conf_path: Union[pathlib.Path, str, None] = None, agent_conf_path: Union[pathlib.Path, str, None] = None, agent_info_path: Union[pathlib.Path, str, None] = None) -> None:
+    def __init__(self, ossec_conf_path: Union[pathlib.Path, str, None] = None,
+                 agent_conf_path: Union[pathlib.Path, str, None] = None,
+                 agent_info_path: Union[pathlib.Path, str, None] = None,
+                 local_internal_options_path: Union[pathlib.Path, str, None] = None) -> None:
 
         self.__get_agent_info(agent_info_path=agent_info_path)
 
@@ -366,6 +370,12 @@ class ConfParser:
 
         self.__conf = FinalConf(
             ossec_conf=self.__parse_conf(ossec_conf_path), agent_conf=self.__parse_conf(agent_conf_path))
+
+        # This is optional
+        local_internal_options = self.__parse_local_internal_options(
+            local_internal_options_path)
+        if local_internal_options != {}:
+            self.__conf.content['local_internal_options'] = local_internal_options
 
     def get_json(self, indent: Optional[int] = 2) -> str:
         return self.__conf.to_json(indent=indent)
@@ -411,6 +421,34 @@ class ConfParser:
 
         content = OrderedDict(sorted(content.items()))
         return content
+
+    def __parse_local_internal_options(self, file_path: Union[pathlib.Path, str, None]) -> dict:
+        # Get agent name and profile
+        if file_path is None:
+            if os.name == 'posix':
+                file_path = '/var/ossec/etc/local_internal_options.conf'
+            else:
+                file_path = 'C:/Program Files (x86)/ossec-agent/local_internal_options.conf'
+
+        internal_options: dict[str, Any] = {}
+
+        if os.path.exists(file_path):
+            option_pattern = re.compile(r'(\w+).(\w+)\s*=\s*(\w+)')
+            with open(file_path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
+
+                for line in lines:
+                    if line.startswith('#'):
+                        continue
+                    match = option_pattern.match(line)
+                    if match:
+                        module = match.group(1)
+                        option = match.group(2)
+                        value = match.group(3)
+
+                        internal_options[module] = internal_options.get(module, {})
+                        internal_options[module][option] = value
+        return internal_options
 
     def __deduplicate_blocks(self, content: dict) -> None:
         root = list(content.items())[0]
@@ -478,6 +516,8 @@ def main() -> None:
                             action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--agent_info_path', '-ai', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
+    arg_parser.add_argument('--local_internal_options_path', '-li', type=pathlib.Path,
+                            action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--output', '-o', type=pathlib.Path,
                             action="store", required=False, help="Output file path")
 
@@ -492,6 +532,9 @@ def main() -> None:
     # Parse agent info file
     agent_info_path = args.agent_info_path
 
+    # Parse local_internal_options file
+    local_internal_options_path = args.local_internal_options_path
+
     if not ossec_conf_path or not agent_conf_path or not agent_info_path:
         # If not specified, it means the tool must read from default locations
         # This means we need to check for privileges.
@@ -501,7 +544,8 @@ def main() -> None:
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
-                               agent_info_path=agent_info_path)
+                               agent_info_path=agent_info_path,
+                               local_internal_options_path=local_internal_options_path)
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as file:
