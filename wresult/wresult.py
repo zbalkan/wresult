@@ -62,7 +62,8 @@ class HtmlGenerator:
         }
 
         .titleStyle {
-            color: var(--titleStyle)
+            color: var(--titleStyle);
+            user-select: none;
         }
 
         .content {
@@ -73,6 +74,7 @@ class HtmlGenerator:
 
         .string {
             color: var(--string);
+            user-select: text;
         }
 
         .string::before,
