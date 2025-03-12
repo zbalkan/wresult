@@ -468,10 +468,6 @@ def is_admin() -> bool:
 
 
 def main() -> None:
-
-    if not is_admin():
-        raise PermissionError("You need to run this script as an administrator.")
-
     arg_parser = argparse.ArgumentParser(
         prog='wresult', description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
     arg_parser.add_argument('--agent_conf_path', '-ap', type=pathlib.Path,
@@ -484,6 +480,9 @@ def main() -> None:
                             action="store", required=False, help="Output file path")
 
     args = arg_parser.parse_args()
+
+    if not is_admin():
+        raise PermissionError("You need to run this script as an administrator.")
 
     # Parse ossec.conf file
     ossec_conf_path = args.ossec_conf_path
