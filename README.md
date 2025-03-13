@@ -55,6 +55,16 @@ As a result:
 pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
 ```
 
+> [!IMPORTANT]
+> ⚠️ Requires Root/Admin Privileges
+> Due to the Wazuh configuration files' permissions, run with sudo (Linux) or as an Administrator (Windows).
+> But if you are testing against custom configuration files only using the hidden parameters, you don't need higher privileges.
+
+> [!WARNING]
+> ⚠️ `pipx` does not play well with `sudo`. Therefore, you need to run `sudo -i`, install `wresult` via `pipx`, and use as root.
+> I could not manage to find out a workaround to install `wresult` as root and use it with `sudo`, unfortunately.
+> If you find it, please let me know by creating an issue, PR or dropping an email.
+
 ## Usage
 
 ```yaml
@@ -71,7 +81,7 @@ options:
 ### CLI Output (JSON for Automation)
 
 ```shell
-sudo wresult | jq .
+wresult | jq .
 ```
 
 🔹 View the exact applied settings in structured JSON, ideal for automation.
@@ -89,7 +99,7 @@ sudo wresult | jq .
 > TODO: Add GIF
 
 ```shell
-sudo wresult --output report.html
+wresult --output report.html
 ```
 
 🔹 Generates an interactive HTML report with expandable sections.
@@ -110,11 +120,6 @@ They are subject to change and must be considered undocumented API.
 --client_keys_path (-ck): Custom path for client.keys file.
 --local_internal_options_path (-li): Custom path for local_internal_options_path.conf file.
 ```
-
-> [!IMPORTANT]
-> ⚠️ Requires Root/Admin Privileges
-> Due to the Wazuh configuration files' permissions, run with sudo (Linux) or as an Administrator (Windows).
-> But if you are testing against custom configuration files only using the hidden parameters, you don't need higher privileges.
 
 ## License
 
