@@ -107,7 +107,7 @@ They are subject to change and must be considered undocumented API.
 ```shell
 --agent_conf_path (-ap): Custom path for agent.conf.
 --ossec_conf_path (-op): Custom path for ossec.conf.
---agent_info_path (-ai): Custom path for .agent_info file.
+--client_keys_path (-ck): Custom path for client.keys file.
 --local_internal_options_path (-li): Custom path for local_internal_options_path.conf file.
 ```
 

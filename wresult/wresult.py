@@ -346,10 +346,10 @@ class ConfParser:
 
     def __init__(self, ossec_conf_path: Union[pathlib.Path, str, None] = None,
                  agent_conf_path: Union[pathlib.Path, str, None] = None,
-                 agent_info_path: Union[pathlib.Path, str, None] = None,
+                 client_keys_path: Union[pathlib.Path, str, None] = None,
                  local_internal_options_path: Union[pathlib.Path, str, None] = None) -> None:
 
-        self.__get_agent_info(agent_info_path=agent_info_path)
+        self.__get_agent_info(client_keys_path=client_keys_path)
 
         if ossec_conf_path is None:
             if os.name == 'posix':
@@ -386,7 +386,7 @@ class ConfParser:
     def get_html(self) -> str:
         return HtmlGenerator().generate(self.__agent_name, self.__agent_id, self.__conf.to_json())
 
-    def __get_agent_info(self, agent_info_path: Union[pathlib.Path, str, None] = None) -> None:
+    def __get_agent_info(self, client_keys_path: Union[pathlib.Path, str, None] = None) -> None:
         # get OS info
         if os.name == 'posix':
             self.__agent_os = "Linux"
@@ -394,23 +394,21 @@ class ConfParser:
             self.__agent_os = "Windows"
 
         # Get agent name and profile
-        if agent_info_path is None:
+        if client_keys_path is None:
             if os.name == 'posix':
-                agent_info_path = '/var/ossec/etc/.agent_info'
+                client_keys_path = '/var/ossec/etc/client.keys'
             else:
-                agent_info_path = 'C:/Program Files (x86)/ossec-agent/.agent_info'
+                client_keys_path = 'C:/Program Files (x86)/ossec-agent/client.keys'
 
-        if os.path.exists(agent_info_path) is False:
+        if os.path.exists(client_keys_path) is False:
             print(
-                f"Could not find agent_info file at {agent_info_path}. Please provide the correct path.")
+                f"Could not find agent_info file at {client_keys_path}. Please provide the correct path.")
             exit(1)
 
-        with open(agent_info_path, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-            self.__agent_name = lines[0].strip()
-            self.__agent_id = lines[2].strip()
-            self.__agent_profile = lines[3].replace(
-                ' ', '').replace(r'\n', '').split(",")
+        with open(client_keys_path, "r", encoding="utf-8") as file:
+            sections = file.read().split(' ')
+            self.__agent_id = sections[0]
+            self.__agent_name = sections[1]
 
     def __parse_conf(self, file_path: Union[pathlib.Path, str]) -> dict:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -420,6 +418,10 @@ class ConfParser:
 
         content: dict = xmltodict.parse(
             '<root>' + text + '</root>').get("root", {})
+
+        # Get profile
+        if content.get("ossec_config") is not None:
+            self.__agent_profile = str(content["ossec_config"]["client"]["config-profile"]).replace(' ', '').split(',')
 
         self.__deduplicate_blocks(content)
 
@@ -520,7 +522,7 @@ def main() -> None:
                             action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--agent_info_path', '-ai', type=pathlib.Path,
+    arg_parser.add_argument('--client_keys_path', '-ck', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--local_internal_options_path', '-li', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
@@ -535,13 +537,13 @@ def main() -> None:
     # Parse agent.conf file
     agent_conf_path = args.agent_conf_path
 
-    # Parse agent info file
-    agent_info_path = args.agent_info_path
+    # Parse client.keys path for agent name and ID
+    client_keys_path = args.client_keys_path
 
     # Parse local_internal_options file
     local_internal_options_path = args.local_internal_options_path
 
-    if not ossec_conf_path or not agent_conf_path or not agent_info_path:
+    if not ossec_conf_path or not agent_conf_path or not client_keys_path:
         # If not specified, it means the tool must read from default locations
         # This means we need to check for privileges.
         if not is_admin():
@@ -551,7 +553,7 @@ def main() -> None:
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
-                               agent_info_path=agent_info_path,
+                               client_keys_path=client_keys_path,
                                local_internal_options_path=local_internal_options_path)
 
     if args.output:
