@@ -124,3 +124,7 @@ They are subject to change and must be considered undocumented API.
 ## License
 
 This project is open-source and licensed under the MIT License.
+
+## Thanks
+
+I was considering a remake of the `gpresult` HTML report, but I came up with a better and easier solution thanks to [Maxim Maeder](https://maximmaeder.com/display-json-with-html-css-and-javascript). I took his example, and simplified for my use case and it worked brilliantly. Kudos to Maxim!
