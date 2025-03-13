@@ -421,8 +421,12 @@ class ConfParser:
 
         # Get profile
         if content.get("ossec_config") is not None:
-            self.__agent_profile = str(
-                content["ossec_config"]["client"]["config-profile"]).replace(' ', '').split(',')
+            if isinstance(content["ossec_config"], list) is False:
+                content["ossec_config"] = [content["ossec_config"]]
+            for section in content["ossec_config"]:
+                if section.get("client") is not None and section.get("client").get("config-profile") is not None:
+                    self.__agent_profile = str(section.get(
+                        "client")["config-profile"]).replace(' ', '').split(',')
 
         self.__deduplicate_blocks(content)
 
@@ -468,13 +472,13 @@ class ConfParser:
                     continue
                 # Handle config per os, profile or name
                 # https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html#options
-                if internal_dict.get('@os') is not None:
+                if root[0] == 'agent_config' and internal_dict.get('@os') is not None:
                     if re.compile(internal_dict.get('@os')).match(self.__agent_os):
                         new_content.update(internal_dict)
-                elif internal_dict.get('@profile') is not None:
-                    if re.compile(internal_dict.get('@profile')).match(self.__agent_profile):
+                elif root[0] == 'agent_config' and internal_dict.get('@profile') is not None:
+                    if any(re.compile(internal_dict.get('@profile')).match(profile_item) for profile_item in self.__agent_profile):
                         new_content.update(internal_dict)
-                elif internal_dict.get('@name') is not None:
+                elif root[0] == 'agent_config' and internal_dict.get('@name') is not None:
                     if re.compile(internal_dict.get('@name')).match(self.__agent_name):
                         new_content.update(internal_dict)
                 else:
