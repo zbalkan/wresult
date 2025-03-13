@@ -466,8 +466,10 @@ class ConfParser:
         root = list(content.items())[0]
         # root[1] is either ossec_config or agent_config
         if isinstance(root[1], list):
-            new_content = root[1][0]  # get the first item
-            for i, internal_dict in enumerate(root[1]):
+            root_filtered = [item for item in root[1] if item is not None]
+
+            new_content = root_filtered[0]  # get the first item
+            for i, internal_dict in enumerate(root_filtered):
                 if i == 0:
                     continue
                 # Handle config per os, profile or name
