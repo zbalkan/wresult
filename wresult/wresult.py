@@ -421,7 +421,8 @@ class ConfParser:
 
         # Get profile
         if content.get("ossec_config") is not None:
-            self.__agent_profile = str(content["ossec_config"]["client"]["config-profile"]).replace(' ', '').split(',')
+            self.__agent_profile = str(
+                content["ossec_config"]["client"]["config-profile"]).replace(' ', '').split(',')
 
         self.__deduplicate_blocks(content)
 
@@ -530,6 +531,7 @@ def wazuh_agent_exists() -> bool:
         print("Unsupported OS")
         exit(1)
 
+
 def main() -> None:
     arg_parser = argparse.ArgumentParser(
         prog='wresult', description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
@@ -566,9 +568,9 @@ def main() -> None:
                 "You need to run this script with higher privileges; either use sudo or run as an administrator.")
             exit(1)
 
-    if not wazuh_agent_exists():
-        print("Wazuh agent is not installed on this machine.")
-        exit()
+        if not wazuh_agent_exists():
+            print("Wazuh agent is not installed on this machine.")
+            exit()
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
