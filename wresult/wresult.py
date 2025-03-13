@@ -515,6 +515,21 @@ def is_admin() -> bool:
         exit(1)
 
 
+def wazuh_agent_exists() -> bool:
+    if os.name == 'posix':
+        if os.path.exists('/var/ossec/bin/wazuh-agentd'):
+            return True
+        else:
+            return False
+    elif os.name == 'nt':
+        if os.path.exists('C:/Program Files (x86)/ossec-agent'):
+            return True
+        else:
+            return False
+    else:
+        print("Unsupported OS")
+        exit(1)
+
 def main() -> None:
     arg_parser = argparse.ArgumentParser(
         prog='wresult', description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
@@ -550,6 +565,10 @@ def main() -> None:
             print(
                 "You need to run this script with higher privileges; either use sudo or run as an administrator.")
             exit(1)
+
+    if not wazuh_agent_exists():
+        print("Wazuh agent is not installed on this machine.")
+        exit()
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
