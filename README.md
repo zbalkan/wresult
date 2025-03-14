@@ -109,7 +109,7 @@ wresult --output report.html
 
 ## Hidden Arguments
 
-In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. Yhe users must provide all 3 of them if needed. Otherwise, the tool will fall back to default locations for the undefined paths. This is designed to test and validate configuration changes with out breaking the agent.
+In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. The users must provide all 3 of them if needed. Otherwise, the tool will fall back to default locations for the undefined paths. This is designed to test and validate configuration changes with out breaking the agent.
 
 They are subject to change and must be considered undocumented API.
 
