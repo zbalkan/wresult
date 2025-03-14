@@ -144,6 +144,99 @@ class HtmlGenerator:
         .footer a:hover {
             text-decoration: underline;
         }
+
+        @media print {
+        body {
+            background: none !important;
+            color: black;
+            font-family: "Arial", sans-serif;
+        }
+
+        /* Keep navbar title and agent metadata */
+        .navbar {
+            display: block !important;
+            background: none !important;
+            color: black;
+            text-align: center;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .navbar-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .navbar-left p {
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;
+            margin: 0;
+        }
+
+        /* Hide unnecessary UI elements */
+        .navbar-links,
+        .footer {
+            display: none !important;
+        }
+
+        /* Expand all JSON sections automatically */
+        details {
+            display: block !important;
+            margin-top: 5px;
+        }
+
+        details > summary {
+            display: block !important;
+            font-weight: bold;
+        }
+
+        /* Style JSON structure as hierarchical headers */
+        details summary:nth-of-type(1) {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase; /* 🔹 Your change: Makes top-level JSON keys uppercase */
+        }
+
+        details summary:nth-of-type(2) {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        details summary:nth-of-type(3) {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        details summary:nth-of-type(4) {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Ensure content fits well on A4 */
+        @page {
+            size: A4 portrait;
+            margin: 20mm;
+        }
+
+        ul {
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            font-size: 12px;
+            word-wrap: break-word;
+        }
+
+        /* Prevent content from breaking across pages */
+        details,
+        details summary,
+        li {
+            page-break-inside: avoid;
+        }
+    }
     </style>
 </head>
 
@@ -287,6 +380,7 @@ class HtmlGenerator:
         <div class="navbar-links">
             <a href="#" onclick="expandAll()" class="button">Show All</a>
             <a href="#" onclick="collapseAll()" class="button">Hide All</a>
+            <a href="#" onclick="window.print()">Print</a>
         </div>
     </div>
 
