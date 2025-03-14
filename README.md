@@ -109,9 +109,9 @@ wresult --output report.html
 
 ## Hidden Arguments
 
-In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. The users must provide all 3 of them if needed. Otherwise, the tool will fall back to default locations for the undefined paths. This is designed to test and validate configuration changes with out breaking the agent.
+In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. The users must provide all 3 of them if needed. Otherwise, the tool will fall back to default locations for the undefined paths. This is designed to test and validate configuration changes without breaking the agent.
 
-They are subject to change and must be considered undocumented API.
+These arguments are for testing only. They are subject to change and should be treated as an undocumented API. 
 
 ```shell
 --agent_conf_path (-ap): Custom path for agent.conf.
@@ -126,4 +126,4 @@ This project is open-source and licensed under the MIT License.
 
 ## Thanks
 
-I was considering a remake of the `gpresult` HTML report, but I came up with a better and easier solution thanks to [Maxim Maeder](https://maximmaeder.com/display-json-with-html-css-and-javascript). I took his example, and simplified for my use case and it worked brilliantly. Kudos to Maxim!
+I was considering a remake of the `gpresult` HTML report, but I came up with a better and easier solution thanks to [Maxim Maeder](https://maximmaeder.com/display-json-with-html-css-and-javascript). I took his example, and simplified it for my use case, and it worked brilliantly. Kudos to Maxim!
