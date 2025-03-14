@@ -58,14 +58,13 @@ pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
 <img src="/assets/installation.gif" width="800" alt="Install via pipx">
 
 > [!IMPORTANT]
-> ⚠️ Requires Root/Admin Privileges
-> Due to the Wazuh configuration files' permissions, run with sudo (Linux) or as an Administrator (Windows).
+> ⚠️ Due to the Wazuh configuration files' permissions, run as root (Linux) or as an Administrator (Windows).
 > But if you are testing against custom configuration files only using the hidden parameters, you don't need higher privileges.
 
 > [!WARNING]
 > ⚠️ `pipx` does not play well with `sudo`. Therefore, you need to run `sudo -i`, install `wresult` via `pipx`, and use as root.
 > I could not manage to find out a workaround to install `wresult` as root and use it with `sudo`, unfortunately.
-> If you find it, please let me know by creating an issue, PR or dropping an email.
+> If you find a solution or a workaround, please let me know by creating an issue, PR or dropping an email.
 
 ## Usage
 
