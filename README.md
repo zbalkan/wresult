@@ -117,7 +117,7 @@ These arguments are for testing only. They are subject to change and should be t
 --agent_conf_path (-ap): Custom path for agent.conf.
 --ossec_conf_path (-op): Custom path for ossec.conf.
 --client_keys_path (-ck): Custom path for client.keys file.
---local_internal_options_path (-li): Custom path for local_internal_options_path.conf file.
+--local_internal_options_path (-li): Custom path for local_internal_options.conf file.
 ```
 
 ## License
