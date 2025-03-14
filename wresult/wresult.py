@@ -378,8 +378,8 @@ class HtmlGenerator:
             <p>Report Date: DATETIME_PLACEHOLDER</p>
         </div>
         <div class="navbar-links">
-            <a href="#" onclick="expandAll()" class="button">Show All</a>
-            <a href="#" onclick="collapseAll()" class="button">Hide All</a>
+            <a href="#" onclick="expandAll()">Show All</a>
+            <a href="#" onclick="collapseAll()">Hide All</a>
             <a href="#" onclick="window.print()">Print</a>
         </div>
     </div>
