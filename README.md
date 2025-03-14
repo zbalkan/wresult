@@ -99,6 +99,14 @@ wresult --output report.html
 
 <img src="/assets/file.gif" width="800" alt="Export to HTML file">
 
+🔹 See the collapsed tree of configuration items.
+
+<img src="/assets/collapsed.png" width="800" alt="HTML report with collapsed items">
+
+🔹 Click "Show all" to have a broader view.
+
+<img src="/assets/expanded.png" width="800" alt="HTML report with expanded items">
+
 ## Hidden Arguments
 
 In order to support testing, the tool has provided hidden parameters that are not visible on the help menu. Yhe users must provide all 3 of them if needed. Otherwise, the tool will fall back to default locations for the undefined paths. This is designed to test and validate configuration changes with out breaking the agent.
