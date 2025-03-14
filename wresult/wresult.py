@@ -30,11 +30,6 @@ class HtmlGenerator:
             --bg: rgb(255, 255, 255);
             --titleStyle: rgb(0, 0, 0);
             --string: rgb(96, 96, 100);
-            --number: rgb(119, 152, 229);
-            --boolean: rgb(206, 142, 227);
-            --function: rgb(109, 176, 137);
-            --objectNull: rgb(176, 142, 109);
-            --undefined: rgb(176, 142, 109);
         }
 
         body {
@@ -82,26 +77,6 @@ class HtmlGenerator:
         .string::after {
             content: '"';
             color: var(--string)
-        }
-
-        .number {
-            color: var(--number);
-        }
-
-        .boolean {
-            color: var(--boolean)
-        }
-
-        .function {
-            color: var(--function)
-        }
-
-        .object {
-            color: var(--objectNull)
-        }
-
-        .undefined {
-            color: var(--undefined)
         }
 
         .navbar {
