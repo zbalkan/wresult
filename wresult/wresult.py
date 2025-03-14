@@ -163,30 +163,39 @@ class HtmlGenerator:
             });
         }
 
-        function wrapTextAtDelimiter(text, maxLength, delimiter = '|') {
-            let result = '';
+        function wrapTextWithDelimiters(text, maxLength, delimiters = [' ', '|']) {
+            let wrappedText = '';
             let start = 0;
 
             while (start < text.length) {
                 let end = start + maxLength;
 
                 if (end >= text.length) {
-                result += text.substring(start);
-                break;
+                    wrappedText += text.substring(start);
+                    break;
                 }
 
-                let wrapAt = text.lastIndexOf(delimiter, end);
+                let slice = text.substring(start, end + 1);
 
-                if (wrapAt <= start) {
-                wrapAt = end;
+                let wrapAt = -1;
+                for (let i = slice.length - 1; i >= 0; i--) {
+                    if (delimiters.includes(slice[i])) {
+                        wrapAt = start + i;
+                        break;
+                    }
                 }
 
-                result += text.substring(start, wrapAt) + '\\n';
-
-                start = wrapAt + (text[wrapAt] === delimiter ? 1 : 0);
+                if (wrapAt <= start || wrapAt === -1) {
+                    wrapAt = end;
+                    wrappedText += text.substring(start, wrapAt) + '\\n';
+                    start = wrapAt;
+                } else {
+                    wrappedText += text.substring(start, wrapAt + 1) + '\\n';
+                    start = wrapAt + 1;
+                }
             }
 
-            return result;
+            return wrappedText;
         }
 
 
@@ -257,9 +266,7 @@ class HtmlGenerator:
                     titleSpan.innerText = `${d}: `
                     titleSpan.classList.add('titleStyle')
 
-                    display = wrapTextAtDelimiter(display, maxLength)
-                    display = wrapTextAtDelimiter(display, maxLength, ' ')
-                    contentSpan.innerText = display;
+                    contentSpan.innerText = wrapTextWithDelimiters(display, maxLength);
                     contentSpan.classList.add(currentType)
 
                     el.appendChild(titleSpan)
