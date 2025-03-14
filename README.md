@@ -55,6 +55,8 @@ As a result:
 pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
 ```
 
+<img src="/assets/installation.gif" width="800" alt="Install via pipx">
+
 > [!IMPORTANT]
 > ⚠️ Requires Root/Admin Privileges
 > Due to the Wazuh configuration files' permissions, run with sudo (Linux) or as an Administrator (Windows).
@@ -86,17 +88,9 @@ wresult | jq .
 
 🔹 View the exact applied settings in structured JSON, ideal for automation.
 
-📌 Example: JSON Output in Linux
-
-> TODO: Add GIF
-
-📌 Example: JSON Output in Windows
-
-> TODO: Add GIF
+<img src="/assets/console.gif" width="800" alt="Print to console">
 
 ### Generate a Human-Readable Report
-
-> TODO: Add GIF
 
 ```shell
 wresult --output report.html
@@ -104,9 +98,7 @@ wresult --output report.html
 
 🔹 Generates an interactive HTML report with expandable sections.
 
-📌 Example: Interactive HTML Report
-
-> TODO: Add GIF
+<img src="/assets/file.gif" width="800" alt="Export to HTML file">
 
 ## Hidden Arguments
 
