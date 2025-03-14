@@ -162,11 +162,36 @@ class HtmlGenerator:
                 setTimeout(() => collapseAll(), 10); // Recursively collapse deeper levels
             });
         }
-    </script>
 
-    <script type="text/javascript">
+        function wrapTextAtDelimiter(text, maxLength, delimiter = '|') {
+            let result = '';
+            let start = 0;
+
+            while (start < text.length) {
+                let end = start + maxLength;
+
+                if (end >= text.length) {
+                result += text.substring(start);
+                break;
+                }
+
+                let wrapAt = text.lastIndexOf(delimiter, end);
+
+                if (wrapAt <= start) {
+                wrapAt = end;
+                }
+
+                result += text.substring(start, wrapAt) + '\\n';
+
+                start = wrapAt + (text[wrapAt] === delimiter ? 1 : 0);
+            }
+
+            return result;
+        }
+
+
         function renderJson({root = '', data, depth = 0} = {}) {
-            const wordwrapPattern = /(?![^\\n]{1,120}$)([^\\n]{1,120})\\s/g;
+            const maxLength = 120;
 
             if (depth == 0 && root == '') {
                 const pre = document.createElement('pre')
@@ -232,7 +257,9 @@ class HtmlGenerator:
                     titleSpan.innerText = `${d}: `
                     titleSpan.classList.add('titleStyle')
 
-                    contentSpan.innerText = display.replace(wordwrapPattern, '$1\\n');
+                    display = wrapTextAtDelimiter(display, maxLength)
+                    display = wrapTextAtDelimiter(display, maxLength, ' ')
+                    contentSpan.innerText = display;
                     contentSpan.classList.add(currentType)
 
                     el.appendChild(titleSpan)
