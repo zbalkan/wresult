@@ -419,6 +419,10 @@ class FinalConf():
         a = agent_conf.copy().get("agent_config", {})
 
         for key, value in a.items():
+            # We can ignore conditional configuration keys as they do not
+            # provide additional information to the user.
+            if key == '@os' or key == '@profile' or key == '@name':
+                continue
             if c.get(key) is None:
                 c[key] = value
             else:
