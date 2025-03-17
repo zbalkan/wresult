@@ -424,7 +424,21 @@ class FinalConf():
             else:
                 if isinstance(c[key], list):
                     if isinstance(value, list):
-                        c[key].extend(value)
+                        # localfile objects must be unique by location field, aka
+                        # if location is the same, then it's the same object
+                        # so we need to override the existing object
+                        if key == 'localfile':
+                            for v in value:
+                                if 'location' in v:
+                                    location = v['location']
+                                    for i, cv in enumerate(c[key]):
+                                        if 'location' in cv and cv['location'] == location:
+                                            c[key][i] = v
+                                            break
+                                    else:
+                                        c[key].append(v)
+                        else:
+                            c[key].extend(value)
                     else:
                         c[key].append(value)
                 elif isinstance(c[key], dict):
