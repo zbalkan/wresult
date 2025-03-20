@@ -1,6 +1,11 @@
+import sys
+
+import pytest
+
 from wresult.wresult import ConfParser
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="MUST run on Windows")
 def test_conf_parser() -> None:
     ossec_conf_path = "tests/data/ossec.conf"
     agent_conf_path = "tests/data/agent.conf"
