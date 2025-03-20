@@ -7,10 +7,10 @@ from wresult.wresult import ConfParser
 
 @pytest.mark.skipif(sys.platform != "win32", reason="MUST run on Windows")
 def test_conf_parser() -> None:
-    ossec_conf_path = "tests/data/ossec.conf"
-    agent_conf_path = "tests/data/agent.conf"
-    client_keys_path = "tests/data/client.keys"
-    local_internal_options_path = "tests/data/local_internal_options.conf"
+    ossec_conf_path = "tests/data/win32/ossec.conf"
+    agent_conf_path = "tests/data/win32/agent.conf"
+    client_keys_path = "tests/data/win32/client.keys"
+    local_internal_options_path = "tests/data/win32/local_internal_options.conf"
 
     policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
                                agent_conf_path=agent_conf_path,
@@ -34,7 +34,7 @@ def test_conf_parser() -> None:
     "enrollment": {
       "enabled": "yes",
       "manager_address": "wazuh.domain.local",
-      "groups": "default-windows"
+      "groups": "default"
     },
     "force_reconnect_interval": "30m"
   },

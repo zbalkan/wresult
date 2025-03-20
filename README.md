@@ -1,5 +1,9 @@
 # Wazuh Agent Configuration Result (`wresult`)
 
+[![Test on Windows](https://github.com/zbalkan/wresult/actions/workflows/win32.yml/badge.svg)](https://github.com/zbalkan/wresult/actions/workflows/win32.yml)
+
+[![Test on Linux](https://github.com/zbalkan/wresult/actions/workflows/linux.yml/badge.svg)](https://github.com/zbalkan/wresult/actions/workflows/linux.yml)
+
 ## Overview
 
 `wresult` provides the running configuration of a Wazuh agent by reconstructing how it applies ossec.conf and agent.conf. This tool is designed to support users for compliance reporting and troubleshooting, ensuring that teams can see the actual settings enforced on an agent.
