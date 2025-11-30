@@ -418,38 +418,39 @@ class FinalConf():
         c = ossec_conf.copy().get("ossec_config", {})
         a = agent_conf.copy().get("agent_config", {})
 
-        for key, value in a.items():
-            # We can ignore conditional configuration keys as they do not
-            # provide additional information to the user.
-            if key == '@os' or key == '@profile' or key == '@name':
-                continue
-            if c.get(key) is None:
-                c[key] = value
-            else:
-                if isinstance(c[key], list):
-                    if isinstance(value, list):
-                        # localfile objects must be unique by location field, aka
-                        # if location is the same, then it's the same object
-                        # so we need to override the existing object
-                        if key == 'localfile':
-                            for v in value:
-                                if 'location' in v:
-                                    location = v['location']
-                                    for i, cv in enumerate(c[key]):
-                                        if 'location' in cv and cv['location'] == location:
-                                            c[key][i] = v
-                                            break
-                                    else:
-                                        c[key].append(v)
-                        else:
-                            c[key].extend(value)
-                    else:
-                        c[key].append(value)
-                elif isinstance(c[key], dict):
-                    # Get to the child objects
-                    c[key].update(value)
+        if a:
+            for key, value in a.items():
+                # We can ignore conditional configuration keys as they do not
+                # provide additional information to the user.
+                if key == '@os' or key == '@profile' or key == '@name':
+                    continue
+                if c.get(key) is None:
+                    c[key] = value
                 else:
-                    c[key] = [c[key], value]
+                    if isinstance(c[key], list):
+                        if isinstance(value, list):
+                            # localfile objects must be unique by location field, aka
+                            # if location is the same, then it's the same object
+                            # so we need to override the existing object
+                            if key == 'localfile':
+                                for v in value:
+                                    if 'location' in v:
+                                        location = v['location']
+                                        for i, cv in enumerate(c[key]):
+                                            if 'location' in cv and cv['location'] == location:
+                                                c[key][i] = v
+                                                break
+                                        else:
+                                            c[key].append(v)
+                            else:
+                                c[key].extend(value)
+                        else:
+                            c[key].append(value)
+                    elif isinstance(c[key], dict):
+                        # Get to the child objects
+                        c[key].update(value)
+                    else:
+                        c[key] = [c[key], value]
 
         self.content = c
 
@@ -661,7 +662,8 @@ def wazuh_agent_exists() -> bool:
 
 def main() -> None:
     arg_parser = argparse.ArgumentParser(
-        prog='wresult', description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
+        prog='wresult',
+        description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
     arg_parser.add_argument('--agent_conf_path', '-ap', type=pathlib.Path,
                             action="store", required=False, help=argparse.SUPPRESS)
     arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path,
