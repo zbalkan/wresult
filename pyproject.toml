@@ -41,14 +41,11 @@ Repository = "https://github.com/zbalkan/wresult"
 Issues = "https://github.com/zbalkan/wresult/issues"
 
 [project.scripts]
-wresult = "wresult.wresult:main"
+wresult = "wresult:main"
 
 [tool.setuptools]
-package-dir = {"" = "wresult"}
+package-dir = {"" = "src"}
 py-modules = ["wresult"]
 
 [tool.setuptools.packages.find]
-where = ["wresult"]
-
-[tool.setuptools.package-data]
-"internal.static" = ["*.*"]
+where = ["src"]

@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from wresult.wresult import ConfParser
+from src.wresult import ConfParser
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="MUST run on Windows")
