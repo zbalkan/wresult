@@ -11,16 +11,17 @@ version = "1.0.0"
 description = "Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file."
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [
-    { name = "Zafer Balkan", email = "zafer@zaferbalkan.com" }
-]
-license = { text = "MIT" }
-keywords = ["wazuh", "logging", "siem"]
+
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+authors = [{ name = "Zafer Balkan", email = "zafer@zaferbalkan.com" }]
+keywords = ["wazuh", "detection", "security", "monitoring", "logging", "siem", "reporting"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Topic :: Security",
+    "Topic :: System :: Logging",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Information Technology",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -35,7 +36,19 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://github.com/zbalkan/wresult"
+Homepage = "https://github.com/zbalkan/wresult"
+Repository = "https://github.com/zbalkan/wresult"
+Issues = "https://github.com/zbalkan/wresult/issues"
 
 [project.scripts]
 wresult = "wresult.wresult:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["wresult"]
+
+[tool.setuptools.packages.find]
+where = ["wresult"]
+
+[tool.setuptools.package-data]
+"internal.static" = ["*.*"]
