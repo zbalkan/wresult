@@ -52,7 +52,7 @@ As a result:
 `wresult` is designed for easy installation and execution via `pipx`.
 
 ```shell
-pipx install https://codeload.github.com/zbalkan/wresult/zip/refs/heads/main
+pipx install wresult
 ```
 
 <img src="/assets/installation.gif" width="800" alt="Install via pipx">
