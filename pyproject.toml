@@ -44,7 +44,7 @@ Issues = "https://github.com/zbalkan/wresult/issues"
 wresult = "wresult.wresult:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = {"" = "wresult"}
 py-modules = ["wresult"]
 
 [tool.setuptools.packages.find]
