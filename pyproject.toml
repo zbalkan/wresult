@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wresult"
-version = "1.0.0"
+version = "1.0.1"
 description = "Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file."
 readme = "README.md"
 requires-python = ">=3.9"
