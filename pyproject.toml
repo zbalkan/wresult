@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "xmltodict",
+    "xmltodict >= 1.0.2",
 ]
 
 [project.urls]
