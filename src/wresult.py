@@ -414,45 +414,70 @@ class FinalConf():
     content: dict
 
     def __init__(self, ossec_conf: dict, agent_conf: dict) -> None:
-
         c = ossec_conf.copy().get("ossec_config", {})
         a = agent_conf.copy().get("agent_config", {})
 
         if a:
-            for key, value in a.items():
-                # We can ignore conditional configuration keys as they do not
-                # provide additional information to the user.
-                if key == '@os' or key == '@profile' or key == '@name':
-                    continue
-                if c.get(key) is None:
-                    c[key] = value
-                else:
-                    if isinstance(c[key], list):
-                        if isinstance(value, list):
-                            # localfile objects must be unique by location field, aka
-                            # if location is the same, then it's the same object
-                            # so we need to override the existing object
-                            if key == 'localfile':
-                                for v in value:
-                                    if 'location' in v:
-                                        location = v['location']
-                                        for i, cv in enumerate(c[key]):
-                                            if 'location' in cv and cv['location'] == location:
-                                                c[key][i] = v
-                                                break
-                                        else:
-                                            c[key].append(v)
-                            else:
-                                c[key].extend(value)
-                        else:
-                            c[key].append(value)
-                    elif isinstance(c[key], dict):
-                        # Get to the child objects
-                        c[key].update(value)
-                    else:
-                        c[key] = [c[key], value]
+            c = self._merge_dicts(c, a)
 
         self.content = c
+
+    @classmethod
+    def _merge_dicts(cls, current: dict, incoming: dict,
+                     skip_conditionals: bool = False) -> dict:
+        result = current.copy()
+        for key, value in incoming.items():
+            if skip_conditionals and key in ('@os', '@profile', '@name'):
+                continue
+            if key not in result:
+                result[key] = value
+            else:
+                result[key] = cls._merge_value(key, result[key], value)
+        return result
+
+    @classmethod
+    def _merge_value(cls, key: str, current: Any, incoming: Any) -> Any:
+        if key == 'localfile':
+            return cls._merge_localfiles(current, incoming)
+
+        if isinstance(current, dict) and isinstance(incoming, dict):
+            return cls._merge_dicts(current, incoming)
+
+        repeatable = {
+            'directories',
+            'ignore',
+            'nodiff',
+            'windows_registry',
+            'registry_ignore',
+            'policy',
+        }
+        if key in repeatable or isinstance(current, list) or isinstance(incoming, list):
+            current_items = current if isinstance(current, list) else [current]
+            incoming_items = incoming if isinstance(incoming, list) else [incoming]
+            return current_items + incoming_items
+
+        # Wazuh reads ossec.conf before agent.conf, so the later scalar wins.
+        return incoming
+
+    @staticmethod
+    def _merge_localfiles(current: Any, incoming: Any) -> Any:
+        current_items = current if isinstance(current, list) else [current]
+        incoming_items = incoming if isinstance(incoming, list) else [incoming]
+        result = list(current_items)
+
+        for item in incoming_items:
+            if isinstance(item, dict) and 'location' in item:
+                for index, existing in enumerate(result):
+                    if (isinstance(existing, dict)
+                            and existing.get('location') == item['location']):
+                        result[index] = item
+                        break
+                else:
+                    result.append(item)
+            else:
+                result.append(item)
+
+        return result
 
     def to_json(self, indent: Optional[int] = None) -> str:
         return json.dumps(self.content, cls=EnhancedJSONEncoder, indent=indent)
@@ -471,6 +496,7 @@ class ConfParser:
                  client_keys_path: Union[pathlib.Path, str, None] = None,
                  local_internal_options_path: Union[pathlib.Path, str, None] = None) -> None:
 
+        self.__agent_profile = []
         self.__get_agent_info(client_keys_path=client_keys_path)
 
         if ossec_conf_path is None:
@@ -585,39 +611,39 @@ class ConfParser:
         return internal_options
 
     def __deduplicate_blocks(self, content: dict) -> None:
-        root = list(content.items())[0]
-        # root[1] is either ossec_config or agent_config
-        if isinstance(root[1], list):
-            root_filtered = [item for item in root[1] if item is not None]
+        if not content:
+            return
 
-            new_content = root_filtered[0]  # get the first item
-            for i, internal_dict in enumerate(root_filtered):
-                if i == 0:
-                    continue
-                # Handle config per os, profile or name
-                # https://documentation.wazuh.com/current/user-manual/reference/centralized-configuration.html#options
-                if root[0] == 'agent_config' and internal_dict.get('@os') is not None:
-                    if re.compile(internal_dict.get('@os')).match(self.__agent_os):
-                        new_content.update(internal_dict)
-                elif root[0] == 'agent_config' and internal_dict.get('@profile') is not None:
-                    if any(re.compile(internal_dict.get('@profile')).match(profile_item) for profile_item in self.__agent_profile):
-                        new_content.update(internal_dict)
-                elif root[0] == 'agent_config' and internal_dict.get('@name') is not None:
-                    if re.compile(internal_dict.get('@name')).match(self.__agent_name):
-                        new_content.update(internal_dict)
-                else:
-                    for key, value in internal_dict.items():
-                        if new_content.get(key) is None:
-                            new_content[key] = value
-                        else:
-                            if not isinstance(new_content[key], list):
-                                new_content[key] = [new_content[key]]
-                            if isinstance(value, list):
-                                new_content[key].extend(value)
-                            else:
-                                new_content[key].append(value)
+        root_name, root_value = next(iter(content.items()))
+        blocks = root_value if isinstance(root_value, list) else [root_value]
+        blocks = [block for block in blocks if block is not None]
 
-            content[root[0]] = new_content
+        merged: dict = {}
+        for block in blocks:
+            if root_name == 'agent_config' and not self.__block_matches(block):
+                continue
+            merged = FinalConf._merge_dicts(
+                merged, block, skip_conditionals=(root_name == 'agent_config')
+            )
+
+        content[root_name] = merged
+
+    def __block_matches(self, block: dict) -> bool:
+        os_pattern = block.get('@os')
+        if os_pattern is not None and re.compile(os_pattern).match(self.__agent_os) is None:
+            return False
+
+        profile_pattern = block.get('@profile')
+        if profile_pattern is not None:
+            if not any(re.compile(profile_pattern).match(profile)
+                       for profile in self.__agent_profile):
+                return False
+
+        name_pattern = block.get('@name')
+        if name_pattern is not None and re.compile(name_pattern).match(self.__agent_name) is None:
+            return False
+
+        return True
 
     def __sanitize(self, xml_content: str) -> str:
         pattern = r'<query>(.*?)</query>'
