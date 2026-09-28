@@ -2,7 +2,6 @@ import json
 
 from src.wresult import ConfParser
 
-
 BASE_OSSEC = """
 <ossec_config>
   <syscheck>
@@ -32,9 +31,7 @@ def parse_config(tmp_path, monkeypatch, agent_conf: str) -> dict:
         self._ConfParser__agent_name = "test-agent"
         self._ConfParser__agent_id = "001"
 
-    monkeypatch.setattr(
-        ConfParser, "_ConfParser__get_agent_info", fake_agent_info
-    )
+    monkeypatch.setattr(ConfParser, "_ConfParser__get_agent_info", fake_agent_info)
 
     parser = ConfParser(
         ossec_conf_path=ossec,
@@ -167,7 +164,8 @@ def test_nested_name_attribute_is_preserved(tmp_path, monkeypatch) -> None:
 
 
 def test_single_localfiles_with_different_locations_accumulate(
-        tmp_path, monkeypatch) -> None:
+    tmp_path, monkeypatch
+) -> None:
     config = parse_config(
         tmp_path,
         monkeypatch,
@@ -184,8 +182,7 @@ def test_single_localfiles_with_different_locations_accumulate(
     assert locations(config) == ["/var/log/auth.log", "/var/log/agent.log"]
 
 
-def test_single_localfile_with_same_location_is_replaced(
-        tmp_path, monkeypatch) -> None:
+def test_single_localfile_with_same_location_is_replaced(tmp_path, monkeypatch) -> None:
     config = parse_config(
         tmp_path,
         monkeypatch,
@@ -199,7 +196,9 @@ def test_single_localfile_with_same_location_is_replaced(
 """,
     )
 
-    assert config["localfile"] == [{
-        "log_format": "json",
-        "location": "/var/log/auth.log",
-    }]
+    assert config["localfile"] == [
+        {
+            "log_format": "json",
+            "location": "/var/log/auth.log",
+        }
+    ]

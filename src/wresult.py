@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import argparse
 import dataclasses
 import json
@@ -7,9 +9,11 @@ import os
 import pathlib
 import re
 import sys
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime as dt
-from typing import Any, Optional, OrderedDict, Union
+from datetime import timezone
+from typing import Any
 
 import xmltodict
 
@@ -398,7 +402,12 @@ class HtmlGenerator:
 </html>
 """
 
-        return template.replace("NAME_PLACEHOLDER", agent_name).replace("ID_PLACEHOLDER", agent_id).replace("DATETIME_PLACEHOLDER", dt.now().isoformat()).replace("JSON_PLACEHOLDER", json)
+        return (
+            template.replace("NAME_PLACEHOLDER", agent_name)
+            .replace("ID_PLACEHOLDER", agent_id)
+            .replace("DATETIME_PLACEHOLDER", dt.now(tz=timezone.utc).isoformat())
+            .replace("JSON_PLACEHOLDER", json)
+        )
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -409,8 +418,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 
 @dataclass
-class FinalConf():
-
+class FinalConf:
     content: dict
 
     def __init__(self, ossec_conf: dict, agent_conf: dict) -> None:
@@ -423,11 +431,12 @@ class FinalConf():
         self.content = c
 
     @classmethod
-    def _merge_dicts(cls, current: dict, incoming: dict,
-                     skip_conditionals: bool = False) -> dict:
+    def _merge_dicts(
+        cls, current: dict, incoming: dict, skip_conditionals: bool = False
+    ) -> dict:
         result = current.copy()
         for key, value in incoming.items():
-            if skip_conditionals and key in ('@os', '@profile', '@name'):
+            if skip_conditionals and key in ("@os", "@profile", "@name"):
                 continue
             if key not in result:
                 result[key] = value
@@ -437,19 +446,19 @@ class FinalConf():
 
     @classmethod
     def _merge_value(cls, key: str, current: Any, incoming: Any) -> Any:
-        if key == 'localfile':
+        if key == "localfile":
             return cls._merge_localfiles(current, incoming)
 
         if isinstance(current, dict) and isinstance(incoming, dict):
             return cls._merge_dicts(current, incoming)
 
         repeatable = {
-            'directories',
-            'ignore',
-            'nodiff',
-            'windows_registry',
-            'registry_ignore',
-            'policy',
+            "directories",
+            "ignore",
+            "nodiff",
+            "windows_registry",
+            "registry_ignore",
+            "policy",
         }
         if key in repeatable or isinstance(current, list) or isinstance(incoming, list):
             current_items = current if isinstance(current, list) else [current]
@@ -466,10 +475,12 @@ class FinalConf():
         result = list(current_items)
 
         for item in incoming_items:
-            if isinstance(item, dict) and 'location' in item:
+            if isinstance(item, dict) and "location" in item:
                 for index, existing in enumerate(result):
-                    if (isinstance(existing, dict)
-                            and existing.get('location') == item['location']):
+                    if (
+                        isinstance(existing, dict)
+                        and existing.get("location") == item["location"]
+                    ):
                         result[index] = item
                         break
                 else:
@@ -479,125 +490,146 @@ class FinalConf():
 
         return result
 
-    def to_json(self, indent: Optional[int] = None) -> str:
+    def to_json(self, indent: int | None = None) -> str:
         return json.dumps(self.content, cls=EnhancedJSONEncoder, indent=indent)
 
 
 class ConfParser:
-
     __agent_os: str
     __agent_name: str
     __agent_id: str
     __agent_profile: list[str]
     __conf: FinalConf
 
-    def __init__(self, ossec_conf_path: Union[pathlib.Path, str, None] = None,
-                 agent_conf_path: Union[pathlib.Path, str, None] = None,
-                 client_keys_path: Union[pathlib.Path, str, None] = None,
-                 local_internal_options_path: Union[pathlib.Path, str, None] = None) -> None:
+    def __init__(
+        self,
+        ossec_conf_path: pathlib.Path | str | None = None,
+        agent_conf_path: pathlib.Path | str | None = None,
+        client_keys_path: pathlib.Path | str | None = None,
+        local_internal_options_path: pathlib.Path | str | None = None,
+    ) -> None:
 
         self.__agent_profile = []
         self.__get_agent_info(client_keys_path=client_keys_path)
 
         if ossec_conf_path is None:
-            if os.name == 'posix':
-                ossec_conf_path = '/var/ossec/etc/ossec.conf'
+            if os.name == "posix":
+                ossec_conf_path = "/var/ossec/etc/ossec.conf"
             else:
-                ossec_conf_path = 'C:/Program Files (x86)/ossec-agent/ossec.conf'
+                ossec_conf_path = "C:/Program Files (x86)/ossec-agent/ossec.conf"
             if os.path.exists(ossec_conf_path) is False:
                 print(
-                    f"Could not find ossec.conf file at {ossec_conf_path}. Please provide the correct path.")
-                exit(1)
+                    f"Could not find ossec.conf file at {ossec_conf_path}. Please provide the correct path."
+                )
+                sys.exit(1)
 
         if agent_conf_path is None:
-            if os.name == 'posix':
-                agent_conf_path = '/var/ossec/etc/shared/agent.conf'
+            if os.name == "posix":
+                agent_conf_path = "/var/ossec/etc/shared/agent.conf"
             else:
-                agent_conf_path = 'C:/Program Files (x86)/ossec-agent/shared/agent.conf'
+                agent_conf_path = "C:/Program Files (x86)/ossec-agent/shared/agent.conf"
             if os.path.exists(agent_conf_path) is False:
                 print(
-                    f"Could not find agent.conf file at {agent_conf_path}. Please provide the correct path.")
-                exit(1)
+                    f"Could not find agent.conf file at {agent_conf_path}. Please provide the correct path."
+                )
+                sys.exit(1)
 
         self.__conf = FinalConf(
-            ossec_conf=self.__parse_conf(ossec_conf_path), agent_conf=self.__parse_conf(agent_conf_path))
+            ossec_conf=self.__parse_conf(ossec_conf_path),
+            agent_conf=self.__parse_conf(agent_conf_path),
+        )
 
         # This is optional
         local_internal_options = self.__parse_local_internal_options(
-            local_internal_options_path)
+            local_internal_options_path
+        )
         if local_internal_options != {}:
-            self.__conf.content['local_internal_options'] = local_internal_options
+            self.__conf.content["local_internal_options"] = local_internal_options
 
-    def get_json(self, indent: Optional[int] = 2) -> str:
+    def get_json(self, indent: int | None = 2) -> str:
         return self.__conf.to_json(indent=indent)
 
     def get_html(self) -> str:
-        return HtmlGenerator().generate(self.__agent_name, self.__agent_id, self.__conf.to_json())
+        return HtmlGenerator().generate(
+            self.__agent_name, self.__agent_id, self.__conf.to_json()
+        )
 
-    def __get_agent_info(self, client_keys_path: Union[pathlib.Path, str, None] = None) -> None:
+    def __get_agent_info(
+        self, client_keys_path: pathlib.Path | str | None = None
+    ) -> None:
         # get OS info
-        if os.name == 'posix':
+        if os.name == "posix":
             self.__agent_os = "Linux"
         else:
             self.__agent_os = "Windows"
 
         # Get agent name and profile
         if client_keys_path is None:
-            if os.name == 'posix':
-                client_keys_path = '/var/ossec/etc/client.keys'
+            if os.name == "posix":
+                client_keys_path = "/var/ossec/etc/client.keys"
             else:
-                client_keys_path = 'C:/Program Files (x86)/ossec-agent/client.keys'
+                client_keys_path = "C:/Program Files (x86)/ossec-agent/client.keys"
 
         if os.path.exists(client_keys_path) is False:
             print(
-                f"Could not find agent_info file at {client_keys_path}. Please provide the correct path.")
-            exit(1)
+                f"Could not find agent_info file at {client_keys_path}. Please provide the correct path."
+            )
+            sys.exit(1)
 
         with open(client_keys_path, "r", encoding="utf-8") as file:
-            sections = file.read().split(' ')
+            sections = file.read().split(" ")
             self.__agent_id = sections[0]
             self.__agent_name = sections[1]
 
-    def __parse_conf(self, file_path: Union[pathlib.Path, str]) -> dict:
+    def __parse_conf(self, file_path: pathlib.Path | str) -> dict:
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
 
         text = self.__sanitize(text)
 
-        content: dict = xmltodict.parse(
-            '<root>' + text + '</root>').get("root", {})
+        content: dict = xmltodict.parse("<root>" + text + "</root>").get("root", {})
 
         # Get profile
         if content.get("ossec_config") is not None:
             if isinstance(content["ossec_config"], list) is False:
                 content["ossec_config"] = [content["ossec_config"]]
             for section in content["ossec_config"]:
-                if section.get("client") is not None and section.get("client").get("config-profile") is not None:
-                    self.__agent_profile = str(section.get(
-                        "client")["config-profile"]).replace(' ', '').split(',')
+                if (
+                    section.get("client") is not None
+                    and section.get("client").get("config-profile") is not None
+                ):
+                    self.__agent_profile = (
+                        str(section.get("client")["config-profile"])
+                        .replace(" ", "")
+                        .split(",")
+                    )
 
         self.__deduplicate_blocks(content)
 
         content = OrderedDict(sorted(content.items()))
         return content
 
-    def __parse_local_internal_options(self, file_path: Union[pathlib.Path, str, None]) -> dict:
+    def __parse_local_internal_options(
+        self, file_path: pathlib.Path | str | None
+    ) -> dict:
         # Get agent name and profile
         if file_path is None:
-            if os.name == 'posix':
-                file_path = '/var/ossec/etc/local_internal_options.conf'
+            if os.name == "posix":
+                file_path = "/var/ossec/etc/local_internal_options.conf"
             else:
-                file_path = 'C:/Program Files (x86)/ossec-agent/local_internal_options.conf'
+                file_path = (
+                    "C:/Program Files (x86)/ossec-agent/local_internal_options.conf"
+                )
 
         internal_options: dict[str, Any] = {}
 
         if os.path.exists(file_path):
-            option_pattern = re.compile(r'(\w+).(\w+)\s*=\s*(\w+)')
+            option_pattern = re.compile(r"(\w+).(\w+)\s*=\s*(\w+)")
             with open(file_path, "r", encoding="utf-8") as file:
                 lines = file.readlines()
 
                 for line in lines:
-                    if line.startswith('#'):
+                    if line.startswith("#"):
                         continue
                     match = option_pattern.match(line)
                     if match:
@@ -605,8 +637,7 @@ class ConfParser:
                         option = match.group(2)
                         value = match.group(3)
 
-                        internal_options[module] = internal_options.get(
-                            module, {})
+                        internal_options[module] = internal_options.get(module, {})
                         internal_options[module][option] = value
         return internal_options
 
@@ -620,86 +651,120 @@ class ConfParser:
 
         merged: dict = {}
         for block in blocks:
-            if root_name == 'agent_config' and not self.__block_matches(block):
+            if root_name == "agent_config" and not self.__block_matches(block):
                 continue
             merged = FinalConf._merge_dicts(
-                merged, block, skip_conditionals=(root_name == 'agent_config')
+                merged, block, skip_conditionals=(root_name == "agent_config")
             )
 
         content[root_name] = merged
 
     def __block_matches(self, block: dict) -> bool:
-        os_pattern = block.get('@os')
-        if os_pattern is not None and re.compile(os_pattern).match(self.__agent_os) is None:
+        os_pattern = block.get("@os")
+        if (
+            os_pattern is not None
+            and re.compile(os_pattern).match(self.__agent_os) is None
+        ):
             return False
 
-        profile_pattern = block.get('@profile')
-        if profile_pattern is not None:
-            if not any(re.compile(profile_pattern).match(profile)
-                       for profile in self.__agent_profile):
-                return False
-
-        name_pattern = block.get('@name')
-        if name_pattern is not None and re.compile(name_pattern).match(self.__agent_name) is None:
+        profile_pattern = block.get("@profile")
+        if profile_pattern is not None and not any(
+            re.compile(profile_pattern).match(profile)
+            for profile in self.__agent_profile
+        ):
             return False
 
-        return True
+        name_pattern = block.get("@name")
+        return not (
+            name_pattern is not None
+            and re.compile(name_pattern).match(self.__agent_name) is None
+        )
 
     def __sanitize(self, xml_content: str) -> str:
-        pattern = r'<query>(.*?)</query>'
+        pattern = r"<query>(.*?)</query>"
         matches = re.findall(pattern, xml_content, re.DOTALL)
 
         for match in matches:
             extracted_data = match.strip()
-            extracted_data = extracted_data.replace(
-                "\\<", "<").replace("\\>", ">").replace(r"\t", " ").replace(r"  ", " ")
-            extracted_data = re.sub(r'\n\s+', ' ', extracted_data)
+            extracted_data = (
+                extracted_data.replace("\\<", "<")
+                .replace("\\>", ">")
+                .replace(r"\t", " ")
+                .replace(r"  ", " ")
+            )
+            extracted_data = re.sub(r"\n\s+", " ", extracted_data)
             xml_content = xml_content.replace(match, extracted_data)
 
         return xml_content
 
 
 def is_admin() -> bool:
-    if os.name == 'posix':
+    if os.name == "posix":
         return int(os.getuid()) == 0  # type: ignore
-    elif os.name == 'nt':
+    elif os.name == "nt":
         import ctypes
+
         return int(ctypes.windll.shell32.IsUserAnAdmin()) != 0
     else:
         print("Unsupported OS")
-        exit(1)
+        sys.exit(1)
 
 
 def wazuh_agent_exists() -> bool:
-    if os.name == 'posix':
-        if os.path.exists('/var/ossec/bin/wazuh-agentd'):
-            return True
-        else:
-            return False
-    elif os.name == 'nt':
-        if os.path.exists('C:/Program Files (x86)/ossec-agent'):
-            return True
-        else:
-            return False
+    if os.name == "posix":
+        return bool(os.path.exists("/var/ossec/bin/wazuh-agentd"))
+    elif os.name == "nt":
+        return bool(os.path.exists("C:/Program Files (x86)/ossec-agent"))
     else:
         print("Unsupported OS")
-        exit(1)
+        sys.exit(1)
 
 
 def main() -> None:
     arg_parser = argparse.ArgumentParser(
-        prog='wresult',
-        description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.")
-    arg_parser.add_argument('--agent_conf_path', '-ap', type=pathlib.Path,
-                            action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--ossec_conf_path', '-op', type=pathlib.Path,
-                            action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--client_keys_path', '-ck', type=pathlib.Path,
-                            action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--local_internal_options_path', '-li', type=pathlib.Path,
-                            action="store", required=False, help=argparse.SUPPRESS)
-    arg_parser.add_argument('--output', '-o', type=pathlib.Path,
-                            action="store", required=False, help="Output file path")
+        prog="wresult",
+        description="Parse the Wazuh agent running configuration, print to stdout as JSON or save to an HTML file.",
+    )
+    arg_parser.add_argument(
+        "--agent_conf_path",
+        "-ap",
+        type=pathlib.Path,
+        action="store",
+        required=False,
+        help=argparse.SUPPRESS,
+    )
+    arg_parser.add_argument(
+        "--ossec_conf_path",
+        "-op",
+        type=pathlib.Path,
+        action="store",
+        required=False,
+        help=argparse.SUPPRESS,
+    )
+    arg_parser.add_argument(
+        "--client_keys_path",
+        "-ck",
+        type=pathlib.Path,
+        action="store",
+        required=False,
+        help=argparse.SUPPRESS,
+    )
+    arg_parser.add_argument(
+        "--local_internal_options_path",
+        "-li",
+        type=pathlib.Path,
+        action="store",
+        required=False,
+        help=argparse.SUPPRESS,
+    )
+    arg_parser.add_argument(
+        "--output",
+        "-o",
+        type=pathlib.Path,
+        action="store",
+        required=False,
+        help="Output file path",
+    )
 
     args = arg_parser.parse_args()
 
@@ -720,17 +785,20 @@ def main() -> None:
         # This means we need to check for privileges.
         if not is_admin():
             print(
-                "You need to run this script with higher privileges; either use sudo or run as an administrator.")
-            exit(1)
+                "You need to run this script with higher privileges; either use sudo or run as an administrator."
+            )
+            sys.exit(1)
 
         if not wazuh_agent_exists():
             print("Wazuh agent is not installed on this machine.")
-            exit()
+            sys.exit()
 
-    policy_parser = ConfParser(ossec_conf_path=ossec_conf_path,
-                               agent_conf_path=agent_conf_path,
-                               client_keys_path=client_keys_path,
-                               local_internal_options_path=local_internal_options_path)
+    policy_parser = ConfParser(
+        ossec_conf_path=ossec_conf_path,
+        agent_conf_path=agent_conf_path,
+        client_keys_path=client_keys_path,
+        local_internal_options_path=local_internal_options_path,
+    )
 
     if args.output:
         # Save to file
@@ -738,8 +806,9 @@ def main() -> None:
         parent = os.path.dirname(output_path)
         if os.path.exists(parent) is False:
             print(
-                f"Could not find the specified directory at {parent}. Please provide the correct path.")
-            exit(1)
+                f"Could not find the specified directory at {parent}. Please provide the correct path."
+            )
+            sys.exit(1)
 
         with open(output_path, "w", encoding="utf-8") as file:
             file.write(policy_parser.get_html())
@@ -752,7 +821,7 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Error: {e.args[0]}")
         try:
             sys.exit(1)
