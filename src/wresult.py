@@ -704,7 +704,10 @@ def is_admin() -> bool:
     elif os.name == "nt":
         import ctypes
 
-        return int(ctypes.windll.shell32.IsUserAnAdmin()) != 0
+        # ``windll`` is only defined by ctypes on Windows, so accessing it via
+        # getattr keeps cross-platform static analysis from treating it as a
+        # universally available module attribute.
+        return int(getattr(ctypes, "windll").shell32.IsUserAnAdmin()) != 0  # noqa: B009
     else:
         print("Unsupported OS")
         sys.exit(1)

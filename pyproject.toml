@@ -37,6 +37,14 @@ dependencies = [
     "xmltodict >= 1.0.2",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "mypy >= 1.0",
+    "pytest >= 7.0",
+    "ruff >= 0.15",
+    "types-xmltodict >= 1.0.2",
+]
+
 [project.urls]
 Homepage = "https://github.com/zbalkan/wresult"
 Repository = "https://github.com/zbalkan/wresult"
@@ -51,3 +59,7 @@ py-modules = ["wresult"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["xmltodict.*", "pytest.*"]
+ignore_missing_imports = true
